@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0; url=static_dashboard.html">
+    <title>HydraFlow-X | Redirecting to Dashboard</title>
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #00ff88;
+            font-family: monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .redirect-message {
+            font-size: 24px;
+            text-shadow: 0 0 10px #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <div class="redirect-message">
+        🚀 Redirecting to HydraFlow-X Dashboard...
+        <br><br>
+        If not redirected automatically, 
+        <a href="static_dashboard.html" style="color: #00ff88;">click here</a>
+    </div>
+    
+    <script>
+        // Backup redirect
+        setTimeout(() => {
+            window.location.href = 'static_dashboard.html';
+        }, 1000);
+    </script>
+</body>
+</html>

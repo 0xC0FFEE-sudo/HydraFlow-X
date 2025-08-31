@@ -1,0 +1,357 @@
+{
+  "apis": {
+    "twitter": {
+      "provider": "twitter",
+      "api_key": "YOUR_TWITTER_API_KEY_HERE",
+      "secret_key": "YOUR_TWITTER_SECRET_KEY_HERE",
+      "bearer_token": "YOUR_TWITTER_BEARER_TOKEN_HERE",
+      "base_url": "https://api.twitter.com/2",
+      "rate_limit_per_second": 50,
+      "enabled": true,
+      "custom_headers": {
+        "User-Agent": "HydraFlow-X/1.0"
+      }
+    },
+    "reddit": {
+      "provider": "reddit",
+      "api_key": "YOUR_REDDIT_CLIENT_ID_HERE",
+      "secret_key": "YOUR_REDDIT_CLIENT_SECRET_HERE",
+      "base_url": "https://oauth.reddit.com",
+      "rate_limit_per_second": 30,
+      "enabled": true,
+      "custom_headers": {
+        "User-Agent": "HydraFlow-X:1.0 (by /u/hydraflow)"
+      }
+    },
+    "dexscreener": {
+      "provider": "dexscreener",
+      "api_key": "YOUR_DEXSCREENER_API_KEY_HERE",
+      "base_url": "https://api.dexscreener.com/latest",
+      "rate_limit_per_second": 100,
+      "enabled": true
+    },
+    "gmgn": {
+      "provider": "gmgn",
+      "api_key": "YOUR_GMGN_API_KEY_HERE",
+      "base_url": "https://gmgn.ai/api",
+      "rate_limit_per_second": 50,
+      "enabled": false
+    }
+  },
+  "rpcs": {
+    "ethereum": {
+      "chain": "ethereum",
+      "provider": "alchemy",
+      "endpoint": "https://eth-mainnet.g.alchemy.com/v2/YOUR_ALCHEMY_API_KEY",
+      "api_key": "YOUR_ALCHEMY_API_KEY_HERE",
+      "websocket_endpoint": "wss://eth-mainnet.g.alchemy.com/v2/YOUR_ALCHEMY_API_KEY",
+      "timeout_ms": 5000,
+      "max_connections": 10,
+      "websocket_enabled": true,
+      "backup_enabled": true,
+      "backup_endpoint": "https://mainnet.infura.io/v3/YOUR_INFURA_KEY"
+    },
+    "solana": {
+      "chain": "solana",
+      "provider": "helius",
+      "endpoint": "https://rpc.helius.xyz/?api-key=YOUR_HELIUS_API_KEY",
+      "api_key": "YOUR_HELIUS_API_KEY_HERE",
+      "websocket_endpoint": "wss://rpc.helius.xyz/?api-key=YOUR_HELIUS_API_KEY",
+      "timeout_ms": 3000,
+      "max_connections": 20,
+      "websocket_enabled": true
+    },
+    "base": {
+      "chain": "base",
+      "provider": "base",
+      "endpoint": "https://mainnet.base.org",
+      "websocket_endpoint": "wss://mainnet.base.org",
+      "timeout_ms": 5000,
+      "max_connections": 10,
+      "websocket_enabled": true
+    },
+    "arbitrum": {
+      "chain": "arbitrum",
+      "provider": "arbitrum",
+      "endpoint": "https://arb1.arbitrum.io/rpc",
+      "websocket_endpoint": "wss://arb1.arbitrum.io/ws",
+      "timeout_ms": 5000,
+      "max_connections": 10,
+      "websocket_enabled": true
+    }
+  },
+  "trading": {
+    "primary_chain": "ethereum",
+    "supported_chains": ["ethereum", "solana", "base", "arbitrum"],
+    "max_position_size_usd": 10000.0,
+    "max_slippage_percent": 2.0,
+    "min_profit_threshold_percent": 0.5,
+    "max_concurrent_trades": 5,
+    "enable_mev_protection": true,
+    "enable_frontrun_protection": true,
+    "enable_sandwich_protection": true,
+    "default_token_out": "USDC",
+    "gas_price_multiplier": 1.2,
+    "max_gas_price_gwei": 100,
+    "risk_management": {
+      "max_drawdown_percent": 5.0,
+      "stop_loss_percent": 2.0,
+      "take_profit_percent": 10.0,
+      "position_sizing_method": "kelly_criterion",
+      "max_portfolio_risk_percent": 2.0
+    },
+    "strategies": {
+      "arbitrage": {
+        "enabled": true,
+        "min_profit_bps": 50,
+        "max_slippage_bps": 100
+      },
+      "momentum": {
+        "enabled": true,
+        "lookback_seconds": 300,
+        "threshold_percent": 1.0
+      },
+      "mean_reversion": {
+        "enabled": false,
+        "lookback_seconds": 900,
+        "deviation_threshold": 2.0
+      },
+      "sentiment_based": {
+        "enabled": true,
+        "sentiment_threshold": 0.7,
+        "volume_threshold_usd": 100000
+      }
+    }
+  },
+  "database": {
+    "type": "postgresql",
+    "host": "localhost",
+    "port": 5432,
+    "database": "hydraflow",
+    "username": "hydraflow",
+    "password": "YOUR_DB_PASSWORD_HERE",
+    "max_connections": 20,
+    "enable_ssl": true,
+    "pool_settings": {
+      "min_connections": 5,
+      "connection_timeout_seconds": 30,
+      "idle_timeout_seconds": 600
+    },
+    "clickhouse": {
+      "host": "localhost",
+      "port": 8123,
+      "database": "hydraflow_analytics",
+      "username": "default",
+      "password": "",
+      "compression": "lz4"
+    },
+    "redis": {
+      "host": "localhost",
+      "port": 6379,
+      "password": "",
+      "db": 0,
+      "max_connections": 10,
+      "connection_timeout_seconds": 5
+    }
+  },
+  "web_dashboard": {
+    "enabled": true,
+    "port": 8080,
+    "host": "0.0.0.0",
+    "enable_ssl": false,
+    "ssl_cert_path": "",
+    "ssl_key_path": "",
+    "enable_auth": true,
+    "default_username": "admin",
+    "default_password": "CHANGE_THIS_PASSWORD",
+    "static_files_path": "./web/static",
+    "enable_api": true,
+    "api_prefix": "/api/v1",
+    "cors_origins": ["http://localhost:3000", "http://localhost:8080"],
+    "session_timeout_minutes": 60,
+    "max_concurrent_sessions": 10
+  },
+  "security": {
+    "enable_hsm": false,
+    "hsm_provider": "software",
+    "encryption_algorithm": "AES-256-GCM",
+    "enable_audit_logging": true,
+    "audit_log_path": "./logs/audit.log",
+    "enable_rate_limiting": true,
+    "rate_limit_requests_per_minute": 1000,
+    "enable_ip_whitelist": false,
+    "allowed_ips": [],
+    "jwt_secret": "YOUR_VERY_SECURE_JWT_SECRET_AT_LEAST_32_CHARACTERS",
+    "jwt_expiry_hours": 24,
+    "password_policy": {
+      "min_length": 12,
+      "require_uppercase": true,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_special_chars": true
+    },
+    "api_key_rotation": {
+      "enabled": true,
+      "rotation_interval_days": 30,
+      "auto_rotate": false
+    }
+  },
+  "monitoring": {
+    "enable_prometheus": true,
+    "prometheus_port": 9090,
+    "enable_grafana": true,
+    "grafana_port": 3000,
+    "log_level": "INFO",
+    "log_format": "JSON",
+    "log_output": "file",
+    "log_file_path": "./logs/hydraflow.log",
+    "max_log_file_size_mb": 100,
+    "max_log_files": 10,
+    "metrics": {
+      "enable_custom_metrics": true,
+      "collection_interval_seconds": 10,
+      "retention_days": 30
+    },
+    "alerts": {
+      "enabled": true,
+      "webhook_url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+      "email_notifications": true,
+      "email_recipient": "alerts@yourcompany.com",
+      "alert_conditions": {
+        "high_latency_ms": 100,
+        "error_rate_percent": 1.0,
+        "memory_usage_percent": 80,
+        "cpu_usage_percent": 80
+      }
+    }
+  },
+  "performance": {
+    "worker_threads": 8,
+    "max_memory_mb": 4096,
+    "enable_profiling": false,
+    "latency_optimization": "ultra",
+    "gc_tuning": {
+      "enable_custom_gc": true,
+      "gc_threads": 2,
+      "gc_interval_ms": 1000
+    },
+    "networking": {
+      "tcp_nodelay": true,
+      "socket_buffer_size_kb": 64,
+      "connection_pool_size": 100,
+      "keep_alive_seconds": 30
+    },
+    "caching": {
+      "enable_memory_cache": true,
+      "memory_cache_size_mb": 512,
+      "cache_ttl_seconds": 300,
+      "enable_disk_cache": false
+    }
+  },
+  "mev_protection": {
+    "enabled": true,
+    "protection_level": "HIGH",
+    "strategies": {
+      "flashbots": {
+        "enabled": true,
+        "relay_url": "https://relay.flashbots.net",
+        "builder_preference": ["flashbots", "eden", "blocknative"]
+      },
+      "jito": {
+        "enabled": true,
+        "block_engine_url": "https://amsterdam.mainnet.block-engine.jito.wtf",
+        "tip_accounts": [
+          "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5",
+          "HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe"
+        ]
+      },
+      "private_pools": {
+        "enabled": true,
+        "preferred_pools": ["flashbots", "eden", "bloXroute"]
+      }
+    },
+    "sandwich_protection": {
+      "enabled": true,
+      "detection_threshold": 0.5,
+      "auto_cancel": true
+    },
+    "frontrun_protection": {
+      "enabled": true,
+      "delay_randomization_ms": 100,
+      "use_commit_reveal": false
+    }
+  },
+  "notifications": {
+    "enabled": true,
+    "channels": {
+      "slack": {
+        "enabled": true,
+        "webhook_url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+        "channel": "#trading-alerts"
+      },
+      "email": {
+        "enabled": true,
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 587,
+        "username": "your-email@gmail.com",
+        "password": "YOUR_APP_PASSWORD",
+        "recipients": ["alerts@yourcompany.com"]
+      },
+      "telegram": {
+        "enabled": false,
+        "bot_token": "YOUR_TELEGRAM_BOT_TOKEN",
+        "chat_id": "YOUR_TELEGRAM_CHAT_ID"
+      }
+    },
+    "alert_types": {
+      "trade_executed": true,
+      "high_profit": true,
+      "system_error": true,
+      "api_error": true,
+      "low_balance": true,
+      "high_gas": true
+    }
+  },
+  "backtesting": {
+    "enabled": true,
+    "data_sources": {
+      "historical_prices": "./data/historical",
+      "historical_events": "./data/events",
+      "block_data": "./data/blocks"
+    },
+    "simulation_settings": {
+      "start_date": "2024-01-01",
+      "end_date": "2024-12-31",
+      "initial_balance_usd": 100000,
+      "transaction_costs_bps": 5,
+      "slippage_model": "linear"
+    }
+  },
+  "deployment": {
+    "environment": "development",
+    "debug_mode": true,
+    "auto_restart": true,
+    "enable_health_checks": true,
+    "health_check_interval_seconds": 30,
+    "graceful_shutdown_timeout_seconds": 30,
+    "docker": {
+      "enabled": false,
+      "image_tag": "hydraflow:latest",
+      "resource_limits": {
+        "memory_mb": 4096,
+        "cpu_cores": 4
+      }
+    },
+    "kubernetes": {
+      "enabled": false,
+      "namespace": "hydraflow",
+      "replicas": 1,
+      "auto_scaling": {
+        "enabled": false,
+        "min_replicas": 1,
+        "max_replicas": 5,
+        "target_cpu_percent": 70
+      }
+    }
+  }
+}

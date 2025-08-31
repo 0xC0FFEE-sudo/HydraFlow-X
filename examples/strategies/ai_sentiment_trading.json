@@ -1,0 +1,162 @@
+{
+  "strategy_name": "AI Sentiment Trading Strategy",
+  "description": "Advanced AI-driven sentiment analysis with real-time social media monitoring",
+  "version": "1.0.0",
+  "enabled": true,
+  "risk_level": "medium",
+  
+  "trading_config": {
+    "mode": "AI_SENTIMENT_MODE",
+    "max_position_size_usd": 2500.0,
+    "max_slippage_percent": 2.0,
+    "gas_price_multiplier": 1.5,
+    "execution_timeout_ms": 1000,
+    "enable_mev_protection": true,
+    "mev_protection_level": "HIGH"
+  },
+  
+  "ai_config": {
+    "sentiment_threshold": 0.7,
+    "confidence_threshold": 0.8,
+    "model_ensemble_enabled": true,
+    "real_time_learning": true,
+    "bias_correction_enabled": true,
+    "sentiment_decay_rate": 0.95
+  },
+  
+  "data_sources": {
+    "twitter": {
+      "enabled": true,
+      "weight": 0.4,
+      "keywords": ["crypto", "defi", "trading", "bullish", "bearish"],
+      "influencer_accounts": ["@VitalikButerin", "@elonmusk", "@aantonop"],
+      "sentiment_models": ["transformer", "lstm"]
+    },
+    "reddit": {
+      "enabled": true,
+      "weight": 0.3,
+      "subreddits": ["CryptoCurrency", "ethereum", "defi", "solana"],
+      "min_upvotes": 10,
+      "comment_analysis": true
+    },
+    "telegram": {
+      "enabled": false,
+      "weight": 0.2,
+      "channels": [],
+      "real_time_monitoring": true
+    },
+    "news_feeds": {
+      "enabled": true,
+      "weight": 0.1,
+      "sources": ["coindesk", "cointelegraph", "theblock"],
+      "headline_analysis": true,
+      "content_analysis": false
+    }
+  },
+  
+  "signal_processing": {
+    "aggregation_window_minutes": 5,
+    "signal_smoothing_enabled": true,
+    "outlier_detection": true,
+    "momentum_analysis": true,
+    "volume_correlation": true,
+    "cross_validation": true
+  },
+  
+  "supported_tokens": {
+    "major_tokens": {
+      "symbols": ["BTC", "ETH", "SOL", "AVAX", "MATIC"],
+      "sentiment_weight": 0.6,
+      "technical_weight": 0.4
+    },
+    "altcoins": {
+      "symbols": ["UNI", "LINK", "AAVE", "COMP", "MKR"],
+      "sentiment_weight": 0.8,
+      "technical_weight": 0.2
+    },
+    "memecoins": {
+      "symbols": ["DOGE", "SHIB", "PEPE"],
+      "sentiment_weight": 0.9,
+      "technical_weight": 0.1
+    }
+  },
+  
+  "execution_rules": {
+    "entry_conditions": {
+      "min_sentiment_score": 0.75,
+      "min_confidence": 0.8,
+      "min_volume_increase": 1.5,
+      "max_price_deviation": 0.05
+    },
+    "exit_conditions": {
+      "sentiment_reversal_threshold": 0.3,
+      "profit_target_percent": 5.0,
+      "stop_loss_percent": 2.0,
+      "time_based_exit_hours": 24
+    },
+    "position_sizing": {
+      "base_size_percent": 1.0,
+      "confidence_multiplier": true,
+      "volatility_adjustment": true,
+      "correlation_adjustment": true
+    }
+  },
+  
+  "chains": {
+    "ethereum": {
+      "enabled": true,
+      "dexes": ["uniswap_v3", "sushiswap"],
+      "gas_limit": 450000,
+      "priority_fee_gwei": 1.5
+    },
+    "solana": {
+      "enabled": true,
+      "dexes": ["raydium", "orca", "jupiter"],
+      "compute_units": 400000,
+      "priority_fee_micro_lamports": 2000
+    },
+    "base": {
+      "enabled": true,
+      "dexes": ["uniswap_v3", "aerodrome"],
+      "gas_limit": 350000,
+      "priority_fee_gwei": 0.05
+    }
+  },
+  
+  "risk_management": {
+    "max_concurrent_positions": 10,
+    "max_exposure_per_token_percent": 20.0,
+    "correlation_limit": 0.7,
+    "sentiment_drawdown_limit": 0.15,
+    "circuit_breaker_enabled": true,
+    "false_signal_penalty": true
+  },
+  
+  "backtesting": {
+    "enabled": true,
+    "lookback_days": 30,
+    "paper_trading_days": 7,
+    "performance_metrics": [
+      "sharpe_ratio", "max_drawdown", "win_rate", 
+      "sentiment_accuracy", "signal_quality"
+    ]
+  },
+  
+  "monitoring": {
+    "sentiment_dashboard": true,
+    "signal_quality_alerts": true,
+    "model_drift_detection": true,
+    "performance_attribution": true,
+    "daily_sentiment_report": true,
+    "false_positive_tracking": true
+  },
+  
+  "advanced": {
+    "multi_timeframe_analysis": true,
+    "cross_asset_correlation": true,
+    "regime_detection": true,
+    "adaptive_thresholds": true,
+    "ensemble_voting": true,
+    "real_time_model_updates": false
+  }
+}

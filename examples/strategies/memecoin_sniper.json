@@ -1,0 +1,85 @@
+{
+  "strategy_name": "Memecoin Sniper Strategy",
+  "description": "Ultra-fast memecoin launch detection and immediate buy execution",
+  "version": "1.0.0",
+  "enabled": true,
+  "risk_level": "high",
+  
+  "trading_config": {
+    "mode": "SNIPER_MODE",
+    "max_position_size_usd": 1000.0,
+    "max_slippage_percent": 5.0,
+    "gas_price_multiplier": 2.0,
+    "execution_timeout_ms": 500,
+    "enable_mev_protection": true,
+    "mev_protection_level": "HIGH"
+  },
+  
+  "filters": {
+    "min_liquidity_usd": 10000,
+    "max_liquidity_usd": 1000000,
+    "min_holder_count": 50,
+    "max_holder_count": 10000,
+    "contract_verification_required": true,
+    "honeypot_check_enabled": true,
+    "blacklisted_tokens": [],
+    "whitelisted_creators": []
+  },
+  
+  "timing": {
+    "scan_interval_ms": 100,
+    "decision_timeout_ms": 50,
+    "execution_delay_ms": 0,
+    "cooldown_between_trades_ms": 1000
+  },
+  
+  "chains": {
+    "ethereum": {
+      "enabled": true,
+      "dexes": ["uniswap_v2", "uniswap_v3"],
+      "gas_limit": 500000,
+      "priority_fee_gwei": 2.0
+    },
+    "solana": {
+      "enabled": true,
+      "dexes": ["raydium", "orca"],
+      "compute_units": 300000,
+      "priority_fee_micro_lamports": 1000
+    },
+    "base": {
+      "enabled": true,
+      "dexes": ["uniswap_v3", "leetswap"],
+      "gas_limit": 300000,
+      "priority_fee_gwei": 0.1
+    }
+  },
+  
+  "profit_taking": {
+    "enabled": true,
+    "target_profit_percent": 100.0,
+    "stop_loss_percent": 50.0,
+    "partial_sell_enabled": true,
+    "partial_sell_levels": [
+      {"profit_percent": 50.0, "sell_percent": 25.0},
+      {"profit_percent": 100.0, "sell_percent": 50.0},
+      {"profit_percent": 200.0, "sell_percent": 75.0}
+    ]
+  },
+  
+  "monitoring": {
+    "track_performance": true,
+    "alert_on_large_gains": true,
+    "alert_on_large_losses": true,
+    "daily_pnl_limit_usd": 5000.0,
+    "max_consecutive_losses": 5
+  },
+  
+  "advanced": {
+    "use_private_relays": true,
+    "bundle_transactions": true,
+    "copy_successful_wallets": false,
+    "enable_ai_sentiment": false,
+    "use_multiple_wallets": true,
+    "wallet_rotation_enabled": true
+  }
+}

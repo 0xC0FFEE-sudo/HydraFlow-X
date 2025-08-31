@@ -1,0 +1,212 @@
+# HydraFlow-X Main Configuration
+# Ultra-low latency DeFi HFT engine configuration
+
+[system]
+version = "1.0.0"
+environment = "production"  # development, testing, production
+log_level = "info"          # debug, info, warn, error
+enable_telemetry = true
+thread_pinning = true       # Pin threads to CPU cores
+numa_optimization = true   # Enable NUMA optimizations
+
+[performance]
+# Latency targets (microseconds)
+target_wire_to_fill_l2 = 900      # L2 target: 900μs
+target_wire_to_fill_l1 = 5000     # L1 target: 5ms  
+target_hedge_latency = 3000       # Hedge execution: 3ms
+target_oracle_detection = 200     # Oracle skew detection: 200μs
+target_cancel_replace = 400       # Cancel/replace: 400μs
+
+# Memory settings
+event_queue_size = 65536
+memory_pool_initial_size = 1024
+enable_hugepages = true
+
+# Apple Silicon optimizations
+[apple_silicon]
+enable_metal_compute = true
+enable_neural_engine = true
+enable_accelerate_framework = true
+optimize_for_arm64 = true
+
+[networking]
+# Connection settings
+max_connections = 1000
+connection_timeout_ms = 5000
+read_timeout_ms = 1000
+write_timeout_ms = 1000
+enable_keepalive = true
+
+# Buffer sizes
+receive_buffer_size = 65536
+send_buffer_size = 65536
+batch_size = 1024
+
+# macOS specific
+use_kqueue = true
+enable_tcp_nodelay = true
+enable_tcp_quickack = true
+
+[blockchain]
+# Ethereum L1
+[blockchain.ethereum]
+enabled = true
+ws_endpoint = "wss://mainnet.infura.io/ws/v3/YOUR_INFURA_KEY"
+http_endpoint = "https://mainnet.infura.io/v3/YOUR_INFURA_KEY"
+chain_id = 1
+gas_price_strategy = "fast"
+max_gas_price_gwei = 200
+confirmation_blocks = 1
+
+# Arbitrum L2
+[blockchain.arbitrum]
+enabled = true
+ws_endpoint = "wss://arbitrum-mainnet.infura.io/ws/v3/YOUR_INFURA_KEY"
+http_endpoint = "https://arbitrum-mainnet.infura.io/v3/YOUR_INFURA_KEY"
+chain_id = 42161
+gas_price_strategy = "standard"
+max_gas_price_gwei = 5
+confirmation_blocks = 1
+
+# Optimism L2
+[blockchain.optimism]
+enabled = true
+ws_endpoint = "wss://optimism-mainnet.infura.io/ws/v3/YOUR_INFURA_KEY"
+http_endpoint = "https://optimism-mainnet.infura.io/v3/YOUR_INFURA_KEY"
+chain_id = 10
+gas_price_strategy = "standard"
+max_gas_price_gwei = 5
+confirmation_blocks = 1
+
+# Base L2
+[blockchain.base]
+enabled = true
+ws_endpoint = "wss://base-mainnet.infura.io/ws/v3/YOUR_INFURA_KEY"
+http_endpoint = "https://base-mainnet.infura.io/v3/YOUR_INFURA_KEY"
+chain_id = 8453
+gas_price_strategy = "standard"
+max_gas_price_gwei = 5
+confirmation_blocks = 1
+
+[builders]
+# MEV Builder endpoints
+[builders.flashbots]
+enabled = true
+endpoint = "https://relay.flashbots.net"
+timeout_ms = 2000
+max_bundles_per_block = 10
+
+[builders.bloxxyz]
+enabled = true
+endpoint = "https://bloxxyz.max-profit.xyz"
+timeout_ms = 2000
+max_bundles_per_block = 10
+
+[builders.beaverbuild]
+enabled = true
+endpoint = "https://rpc.beaverbuild.org"
+timeout_ms = 2000
+max_bundles_per_block = 10
+
+[strategies]
+# Oracle arbitrage strategy
+[strategies.oracle_arbitrage]
+enabled = true
+min_profit_threshold = 100.0    # Minimum $100 profit
+max_position_size = 100000.0    # Maximum $100k position
+max_hold_time_ms = 5000         # Maximum 5 second hold
+gas_cost_tolerance = 50.0       # Maximum $50 gas cost
+price_sources = ["chainlink", "pyth", "uniswap_v3"]
+
+# Sequencer queue alpha strategy  
+[strategies.sequencer_queue]
+enabled = true
+min_inclusion_probability = 0.95  # 95% inclusion confidence
+tip_optimization_factor = 1.2     # 20% tip buffer
+max_queue_depth = 100             # Monitor top 100 transactions
+bundle_optimization = true
+
+# Liquidity epoch breathing strategy
+[strategies.liquidity_epoch]
+enabled = true
+epoch_window_seconds = 3600       # 1 hour epochs
+spread_threshold = 0.005          # 0.5% spread widening threshold
+max_inventory_pct = 0.1           # 10% maximum inventory
+auto_hedge = true
+
+[risk_management]
+# Portfolio limits
+max_portfolio_value = 10000000.0    # $10M maximum portfolio
+max_daily_var = 50000.0             # $50k daily VaR limit
+max_portfolio_leverage = 3.0        # 3x maximum leverage
+max_drawdown = 0.15                 # 15% maximum drawdown
+min_liquidity_ratio = 0.1           # 10% minimum cash
+
+# Position limits
+max_single_position_pct = 0.2       # 20% maximum single position
+max_sector_exposure_pct = 0.4       # 40% maximum sector exposure
+default_stop_loss_pct = 0.05        # 5% default stop loss
+
+# Circuit breakers
+[risk_management.circuit_breakers]
+price_movement_threshold = 0.10     # 10% price movement
+volume_spike_threshold = 5.0        # 5x normal volume
+volatility_surge_threshold = 3.0    # 3x normal volatility
+gas_price_spike_gwei = 200          # 200 gwei gas price spike
+correlation_breakdown_threshold = 0.5  # 50% correlation drop
+
+[machine_learning]
+# Model settings
+enable_quantum_inspired_ai = true
+enable_multi_agent_system = true
+enable_anomaly_detection = true
+enable_reinforcement_learning = true
+
+# Apple ML settings
+[machine_learning.apple_ml]
+enable_core_ml = true
+enable_metal_performance_shaders = true
+enable_neural_engine = true
+model_cache_size = 1000
+
+# Training settings  
+[machine_learning.training]
+retrain_interval_hours = 24
+validation_split = 0.2
+early_stopping_patience = 10
+learning_rate = 0.001
+
+[oracles]
+# Chainlink price feeds
+[oracles.chainlink]
+enabled = true
+ws_endpoint = "wss://cl-adapter.linkfollowprotocol.com"
+update_frequency_ms = 1000
+staleness_threshold_ms = 30000
+
+# Pyth Network
+[oracles.pyth]  
+enabled = true
+ws_endpoint = "wss://pythnet.rpcpool.com"
+update_frequency_ms = 400
+staleness_threshold_ms = 10000
+
+[logging]
+# Log file settings
+log_directory = "./logs"
+max_log_file_size_mb = 100
+max_log_files = 10
+compress_old_logs = true
+
+# Binary WAL settings
+enable_binary_wal = true
+wal_directory = "./wal"
+wal_sync_interval_ms = 100
+wal_compression = "zstd"
+
+# Telemetry settings
+[logging.telemetry]
+enabled = true
+export_interval_ms = 1000
+metrics_endpoint = "http://localhost:8086/write"
+export_format = "influxdb"
