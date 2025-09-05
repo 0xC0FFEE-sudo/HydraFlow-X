@@ -774,22 +774,6 @@ This project is dual-licensed:
 - **CMU CSD**: Lock-free algorithm verification and formal methods
 - **UC Berkeley RISELab**: Blockchain scalability and consensus mechanisms
 
-## 🌟 Community & Ecosystem
-
-### **Professional Support Channels**
-
-- **🔧 Technical Support**: [support@hydraflow.dev](mailto:support@hydraflow.dev)
-- **🚀 Enterprise Sales**: [enterprise@hydraflow.dev](mailto:enterprise@hydraflow.dev)  
-- **🔒 Security Reports**: [security@hydraflow.dev](mailto:security@hydraflow.dev)
-- **📚 Documentation**: [docs.hydraflow.dev](https://docs.hydraflow.dev)
-
-### **Developer Community**
-
-- **Discord**: [HydraFlow Engineering](https://discord.gg/hydraflow-eng) - 2,500+ developers
-- **GitHub Discussions**: Technical Q&A and feature proposals
-- **Monthly Meetups**: Virtual presentations on HFT architecture and DeFi innovations
-- **Bug Bounty Program**: Up to $50,000 for critical vulnerabilities
-
 ## ⚠️ Risk Disclosure
 
 **IMPORTANT LEGAL NOTICE**: HydraFlow-X is sophisticated trading software designed for experienced institutional users. 
