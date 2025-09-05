@@ -175,10 +175,14 @@ public:
     using ConnectionCallback = std::function<void(WebSocketConnection::ConnectionId, bool connected)>;
     using MessageCallback = std::function<void(WebSocketConnection::ConnectionId, const std::string&)>;
     using ErrorCallback = std::function<void(const std::string& error)>;
-    
+
     void set_connection_callback(ConnectionCallback callback) { connection_callback_ = callback; }
     void set_message_callback(MessageCallback callback) { message_callback_ = callback; }
     void set_error_callback(ErrorCallback callback) { error_callback_ = callback; }
+
+    // Public accessors for event handler
+    ConnectionCallback get_connection_callback() const { return connection_callback_; }
+    MessageCallback get_message_callback() const { return message_callback_; }
     
 private:
     WebSocketConfig config_;

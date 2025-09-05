@@ -133,10 +133,10 @@ namespace monitoring_utils {
 // MonitoringSystem implementation
 MonitoringSystem::MonitoringSystem(const MonitoringConfig& config) 
     : config_(config) {
-    std::cout << "📊 Initializing Monitoring System..." << std::endl;
-    std::cout << "   Metric collection interval: " << config_.metric_collection_interval.count() << "s" << std::endl;
-    std::cout << "   Alert evaluation interval: " << config_.alert_evaluation_interval.count() << "s" << std::endl;
-    std::cout << "   Health check interval: " << config_.health_check_interval.count() << "s" << std::endl;
+    HFX_LOG_INFO("📊 Initializing Monitoring System...");
+    HFX_LOG_INFO("   Metric collection interval: " + std::to_string(config_.metric_collection_interval.count()) + "s");
+    HFX_LOG_INFO("   Alert evaluation interval: " + std::to_string(config_.alert_evaluation_interval.count()) + "s");
+    HFX_LOG_INFO("   Health check interval: " + std::to_string(config_.health_check_interval.count()) + "s");
 }
 
 MonitoringSystem::~MonitoringSystem() {
@@ -144,7 +144,7 @@ MonitoringSystem::~MonitoringSystem() {
 }
 
 bool MonitoringSystem::initialize() {
-    std::cout << "🔧 Initializing monitoring system components..." << std::endl;
+    HFX_LOG_INFO("🔧 Initializing monitoring system components...");
     
     // Initialize cURL for webhook/HTTP alerts
     curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -165,17 +165,17 @@ bool MonitoringSystem::initialize() {
         return create_monitoring_health();
     });
     
-    std::cout << "✅ Monitoring system initialized" << std::endl;
+    HFX_LOG_INFO("✅ Monitoring system initialized");
     return true;
 }
 
 bool MonitoringSystem::start() {
     if (running_.load()) {
-        std::cout << "⚠️  Monitoring system already running" << std::endl;
+        HFX_LOG_INFO("⚠️  Monitoring system already running");
         return true;
     }
     
-    std::cout << "🚀 Starting monitoring system..." << std::endl;
+    HFX_LOG_INFO("🚀 Starting monitoring system...");
     
     running_.store(true);
     shutdown_requested_.store(false);
@@ -194,8 +194,8 @@ bool MonitoringSystem::start() {
     // Start cleanup worker
     cleanup_worker_ = std::thread(&MonitoringSystem::cleanup_worker, this);
     
-    std::cout << "✅ Monitoring system started with " << config_.metric_worker_threads 
-              << " metric workers" << std::endl;
+    HFX_LOG_INFO("✅ Monitoring system started with " + std::to_string(config_.metric_worker_threads) 
+              + " metric workers");
     return true;
 }
 
@@ -204,7 +204,7 @@ bool MonitoringSystem::stop() {
         return true;
     }
     
-    std::cout << "🛑 Stopping monitoring system..." << std::endl;
+    HFX_LOG_INFO("🛑 Stopping monitoring system...");
     
     shutdown_requested_.store(true);
     running_.store(false);
@@ -236,7 +236,7 @@ bool MonitoringSystem::stop() {
     // Cleanup cURL
     curl_global_cleanup();
     
-    std::cout << "✅ Monitoring system stopped" << std::endl;
+    HFX_LOG_INFO("✅ Monitoring system stopped");
     return true;
 }
 
@@ -318,8 +318,8 @@ void MonitoringSystem::add_alert_rule(const AlertRule& rule) {
     
     alert_rules_.push_back(rule);
     
-    std::cout << "📋 Added alert rule: " << rule.name 
-              << " (" << monitoring_utils::severity_to_string(rule.severity) << ")" << std::endl;
+    HFX_LOG_INFO("📋 Added alert rule: " + rule.name + 
+              " (" + monitoring_utils::severity_to_string(rule.severity) + ")");
 }
 
 void MonitoringSystem::trigger_alert(const std::string& message, AlertSeverity severity,
@@ -362,13 +362,13 @@ void MonitoringSystem::register_health_checker(const std::string& component_name
     health_checkers_[component_name] = checker;
     stats_.active_health_checkers.fetch_add(1);
     
-    std::cout << "🏥 Registered health checker for: " << component_name << std::endl;
+    HFX_LOG_INFO("🏥 Registered health checker for: " + component_name);
 }
 
 void MonitoringSystem::register_alert_handler(AlertChannel channel, AlertHandler handler) {
     alert_handlers_[channel] = handler;
     
-    std::cout << "📢 Registered alert handler for: " 
+    HFX_LOG_INFO("📢 Registered alert handler for: " 
               << monitoring_utils::channel_to_string(channel) << std::endl;
 }
 
@@ -436,7 +436,7 @@ void MonitoringSystem::record_system_performance(const std::string& component, d
 
 // Pre-configured alert rules
 void MonitoringSystem::setup_trading_alerts() {
-    std::cout << "📊 Setting up trading-specific alert rules..." << std::endl;
+    HFX_LOG_INFO("📊 Setting up trading-specific alert rules...");
     
     // High latency alert
     AlertRule latency_rule;
@@ -472,11 +472,11 @@ void MonitoringSystem::setup_trading_alerts() {
     mev_rule.channels = {AlertChannel::CONSOLE};
     add_alert_rule(mev_rule);
     
-    std::cout << "✅ Trading alert rules configured" << std::endl;
+    HFX_LOG_INFO("✅ Trading alert rules configured");
 }
 
 void MonitoringSystem::setup_system_alerts() {
-    std::cout << "🖥️  Setting up system-level alert rules..." << std::endl;
+    HFX_LOG_INFO("🖥️  Setting up system-level alert rules...");
     
     // High CPU usage
     AlertRule cpu_rule;
@@ -500,12 +500,12 @@ void MonitoringSystem::setup_system_alerts() {
     memory_rule.channels = {AlertChannel::CONSOLE};
     add_alert_rule(memory_rule);
     
-    std::cout << "✅ System alert rules configured" << std::endl;
+    HFX_LOG_INFO("✅ System alert rules configured");
 }
 
 // Worker thread implementations
 void MonitoringSystem::metric_worker() {
-    std::cout << "📊 Starting metric worker thread" << std::endl;
+    HFX_LOG_INFO("📊 Starting metric worker thread");
     
     while (running_.load()) {
         std::unique_lock<std::mutex> lock(metric_queue_mutex_);
@@ -524,11 +524,11 @@ void MonitoringSystem::metric_worker() {
         }
     }
     
-    std::cout << "📊 Metric worker thread stopped" << std::endl;
+    HFX_LOG_INFO("📊 Metric worker thread stopped");
 }
 
 void MonitoringSystem::alert_evaluator_worker() {
-    std::cout << "🚨 Starting alert evaluator thread" << std::endl;
+    HFX_LOG_INFO("🚨 Starting alert evaluator thread");
     
     while (running_.load()) {
         std::this_thread::sleep_for(config_.alert_evaluation_interval);
@@ -538,11 +538,11 @@ void MonitoringSystem::alert_evaluator_worker() {
         evaluate_alert_rules();
     }
     
-    std::cout << "🚨 Alert evaluator thread stopped" << std::endl;
+    HFX_LOG_INFO("🚨 Alert evaluator thread stopped");
 }
 
 void MonitoringSystem::health_monitor_worker() {
-    std::cout << "🏥 Starting health monitor thread" << std::endl;
+    HFX_LOG_INFO("🏥 Starting health monitor thread");
     
     while (running_.load()) {
         std::this_thread::sleep_for(config_.health_check_interval);
@@ -552,11 +552,11 @@ void MonitoringSystem::health_monitor_worker() {
         update_system_health();
     }
     
-    std::cout << "🏥 Health monitor thread stopped" << std::endl;
+    HFX_LOG_INFO("🏥 Health monitor thread stopped");
 }
 
 void MonitoringSystem::cleanup_worker() {
-    std::cout << "🧹 Starting cleanup worker thread" << std::endl;
+    HFX_LOG_INFO("🧹 Starting cleanup worker thread");
     
     while (running_.load()) {
         std::this_thread::sleep_for(std::chrono::minutes(5));
@@ -567,7 +567,7 @@ void MonitoringSystem::cleanup_worker() {
         cleanup_resolved_alerts();
     }
     
-    std::cout << "🧹 Cleanup worker thread stopped" << std::endl;
+    HFX_LOG_INFO("🧹 Cleanup worker thread stopped");
 }
 
 void MonitoringSystem::process_metric(const MetricPoint& metric) {
@@ -708,8 +708,8 @@ void MonitoringSystem::trigger_alert_internal(const Alert& alert) {
     
     stats_.alerts_triggered.fetch_add(1);
     
-    std::cout << "🚨 Alert triggered: " << alert.rule_name 
-              << " (" << monitoring_utils::severity_to_string(alert.severity) << ")" << std::endl;
+    HFX_LOG_INFO("🚨 Alert triggered: " + alert.rule_name 
+              + " (" + monitoring_utils::severity_to_string(alert.severity) + ")");
 }
 
 void MonitoringSystem::send_alert_to_channels(const Alert& alert, const std::vector<AlertChannel>& channels) {
@@ -719,7 +719,7 @@ void MonitoringSystem::send_alert_to_channels(const Alert& alert, const std::vec
             try {
                 it->second(alert);
             } catch (const std::exception& e) {
-                std::cerr << "❌ Failed to send alert via " 
+                HFX_LOG_ERROR("❌ Failed to send alert via " 
                           << monitoring_utils::channel_to_string(channel) 
                           << ": " << e.what() << std::endl;
             }
@@ -737,18 +737,17 @@ void MonitoringSystem::send_console_alert(const Alert& alert) {
         case AlertSeverity::EMERGENCY: severity_emoji = "🚨"; break;
     }
     
-    std::cout << severity_emoji << " ALERT [" 
-              << monitoring_utils::severity_to_string(alert.severity) 
-              << "] " << alert.rule_name << ": " << alert.message 
-              << " (at " << monitoring_utils::format_timestamp(alert.triggered_at) << ")" 
-              << std::endl;
+    HFX_LOG_INFO(severity_emoji + " ALERT [" 
+              + monitoring_utils::severity_to_string(alert.severity) 
+              + "] " + alert.rule_name + ": " + alert.message 
+              + " (at " + monitoring_utils::format_timestamp(alert.triggered_at) + ")");
 }
 
 void MonitoringSystem::send_slack_alert(const Alert& alert) {
     if (config_.slack_webhook_url.empty()) return;
     
     // Mock Slack integration - in real implementation would use cURL to send webhook
-    std::cout << "📱 Sending Slack alert: " << alert.message << std::endl;
+    HFX_LOG_INFO("📱 Sending Slack alert: " + alert.message);
 }
 
 void MonitoringSystem::update_system_health() {
@@ -835,7 +834,7 @@ void MonitoringSystem::cleanup_old_metrics() {
     }
     
     if (total_removed > 0) {
-        std::cout << "🧹 Cleaned up " << total_removed << " old metrics" << std::endl;
+        HFX_LOG_INFO("🧹 Cleaned up " + std::to_string(total_removed) + " old metrics");
     }
 }
 
@@ -854,7 +853,7 @@ void MonitoringSystem::cleanup_resolved_alerts() {
     
     size_t removed = original_size - active_alerts_.size();
     if (removed > 0) {
-        std::cout << "🧹 Cleaned up " << removed << " resolved alerts" << std::endl;
+        HFX_LOG_INFO("🧹 Cleaned up " + std::to_string(removed) + " resolved alerts");
     }
 }
 
@@ -911,7 +910,7 @@ void MonitoringSystem::reset_stats() {
     stats_.avg_metric_processing_time_us.store(0.0);
     stats_.avg_alert_evaluation_time_us.store(0.0);
     
-    std::cout << "📊 Monitoring statistics reset" << std::endl;
+    HFX_LOG_INFO("📊 Monitoring statistics reset");
 }
 
 // Utility functions continued

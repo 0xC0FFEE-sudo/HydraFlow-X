@@ -8,6 +8,7 @@ add_library(hfx-viz STATIC
     src/imgui_dashboard.cpp
     src/performance_metrics.cpp
     src/data_streamer.cpp
+    src/mongoose.c
 )
 
 target_include_directories(hfx-viz PUBLIC include)
@@ -29,15 +30,6 @@ if(NOT EXISTS ${IMGUI_DIR})
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
     file(RENAME ${CMAKE_CURRENT_BINARY_DIR}/imgui-docking ${IMGUI_DIR})
-endif()
-
-# WebSocket++ for web streaming (header-only)
-set(WEBSOCKETPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../third-party/websocketpp)
-if(NOT EXISTS ${WEBSOCKETPP_DIR})
-    message(STATUS "WebSocket++ not found, downloading...")
-    execute_process(
-        COMMAND git clone --depth 1 https://github.com/zaphoyd/websocketpp.git ${WEBSOCKETPP_DIR}
-    )
 endif()
 
 # JSON for modern C++ (header-only)
@@ -64,8 +56,8 @@ target_sources(hfx-viz PRIVATE
 target_include_directories(hfx-viz PRIVATE
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
-    ${WEBSOCKETPP_DIR}
     ${JSON_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 # Platform-specific visualization optimizations
@@ -105,9 +97,5 @@ target_link_libraries(hfx-viz PRIVATE glfw)
 find_package(Threads REQUIRED)
 target_link_libraries(hfx-viz PRIVATE Threads::Threads)
 
-# Boost for ASIO (WebSocket server)
-find_package(Boost COMPONENTS system thread QUIET)
-if(Boost_FOUND)
-    target_link_libraries(hfx-viz PRIVATE Boost::system Boost::thread)
-    target_compile_definitions(hfx-viz PRIVATE HAS_BOOST_ASIO=1)
-endif()
+# Mongoose provides native WebSocket support
+target_compile_definitions(hfx-viz PRIVATE HAS_MONGOOSE_WEBSOCKET=1)

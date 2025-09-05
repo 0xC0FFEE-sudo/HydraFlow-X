@@ -11,12 +11,13 @@ add_library(hfx-risk STATIC
 
 target_include_directories(hfx-risk PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/hfx-strat/include
+    ${CMAKE_SOURCE_DIR}/hfx-core/include
 )
 
 target_link_libraries(hfx-risk PUBLIC
     hfx-core
     hfx-strat
-    ${Python3_LIBRARIES}
 )
 
 target_compile_features(hfx-risk PUBLIC cxx_std_23)

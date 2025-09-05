@@ -106,7 +106,7 @@ position sizes, and detailed reasoning for each recommendation.
     }
     
     bool initialize() {
-        std::cout << "🧠 Initializing LLM Decision System" << std::endl;
+        HFX_LOG_INFO("🧠 Initializing LLM Decision System");
         
         // Initialize curl globally
         curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -117,9 +117,9 @@ position sizes, and detailed reasoning for each recommendation.
         // Reset statistics
         reset_statistics();
         
-        std::cout << "✅ LLM Decision System initialized" << std::endl;
-        std::cout << "   Model: " << model_name_ << std::endl;
-        std::cout << "   Strategies: " << strategies_.size() << std::endl;
+        HFX_LOG_INFO("✅ LLM Decision System initialized");
+        HFX_LOG_INFO("   Model: " << model_name_ << std::endl;
+        HFX_LOG_INFO("   Strategies: " << strategies_.size() << std::endl;
         
         return true;
     }
@@ -134,7 +134,7 @@ position sizes, and detailed reasoning for each recommendation.
         decision_processor_thread_ = std::thread(&DecisionImpl::decision_processor_worker, this);
         market_monitor_thread_ = std::thread(&DecisionImpl::market_monitor_worker, this);
         
-        std::cout << "🎯 LLM Decision System started" << std::endl;
+        HFX_LOG_INFO("🎯 LLM Decision System started");
     }
     
     void stop() {
@@ -150,7 +150,7 @@ position sizes, and detailed reasoning for each recommendation.
             market_monitor_thread_.join();
         }
         
-        std::cout << "🛑 LLM Decision System stopped" << std::endl;
+        HFX_LOG_INFO("🛑 LLM Decision System stopped");
     }
     
     void process_sentiment_signal(const SentimentSignal& signal) {
@@ -229,7 +229,7 @@ private:
             model_endpoint_url_ = "https://api.anthropic.com/v1/messages";
         } else {
             // Fallback to simulation
-            std::cout << "⚠️  No API keys found - using simulation mode" << std::endl;
+            HFX_LOG_INFO("⚠️  No API keys found - using simulation mode");
             api_key_ = "simulation";
             model_endpoint_url_ = "simulation";
         }
@@ -570,7 +570,7 @@ private:
                 process_queued_inputs();
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
             } catch (const std::exception& e) {
-                std::cerr << "Decision processor error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Decision processor error: " << e.what() << std::endl;
             }
         }
     }
@@ -665,7 +665,7 @@ private:
                 monitor_market_conditions();
                 std::this_thread::sleep_for(std::chrono::seconds(5));
             } catch (const std::exception& e) {
-                std::cerr << "Market monitor error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Market monitor error: " << e.what() << std::endl;
             }
         }
     }
@@ -687,7 +687,7 @@ private:
             try {
                 callback(decision);
             } catch (const std::exception& e) {
-                std::cerr << "Decision callback error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Decision callback error: " << e.what() << std::endl;
             }
         }
     }
@@ -753,12 +753,12 @@ void LLMDecisionSystem::get_statistics(DecisionStats& stats_out) const {
 
 void LLMDecisionSystem::emergency_stop() {
     pimpl_->emergency_stopped_.store(true);
-    std::cout << "🚨 LLM Decision System - Emergency stop activated!" << std::endl;
+    HFX_LOG_INFO("🚨 LLM Decision System - Emergency stop activated!");
 }
 
 void LLMDecisionSystem::pause_trading(bool paused) {
     pimpl_->trading_paused_.store(paused);
-    std::cout << (paused ? "⏸️  " : "▶️  ") << "LLM Trading " << (paused ? "paused" : "resumed") << std::endl;
+    HFX_LOG_INFO((paused ? "⏸️  " : "▶️  ") << "LLM Trading " << (paused ? "paused" : "resumed") << std::endl;
 }
 
 } // namespace hfx::ai

@@ -35,7 +35,7 @@ enum class KeyRole {
 };
 
 // Security levels for different operations
-enum class SecurityLevel {
+enum class HSMKeySecurityLevel {
     LOW,               // Basic operations
     MEDIUM,            // Standard trading
     HIGH,              // Large value transactions
@@ -47,7 +47,7 @@ struct KeyInfo {
     std::string key_id;
     std::string label;
     KeyRole role;
-    SecurityLevel security_level;
+    HSMKeySecurityLevel security_level;
     std::string algorithm;          // e.g., "ECDSA_P256", "RSA_2048"
     std::chrono::system_clock::time_point created_at;
     std::chrono::system_clock::time_point expires_at;
@@ -64,7 +64,7 @@ struct SigningRequest {
     std::string key_id;
     std::vector<uint8_t> data_to_sign;
     std::string operation_type;     // "trade", "mev", "emergency"
-    SecurityLevel required_level;
+    HSMKeySecurityLevel required_level;
     uint64_t value_wei;            // Transaction value for risk assessment
     std::chrono::system_clock::time_point timestamp;
     std::vector<std::string> approvers; // For multi-auth
@@ -100,7 +100,7 @@ struct HSMSession {
     std::chrono::system_clock::time_point created_at;
     std::chrono::system_clock::time_point last_activity;
     std::atomic<bool> is_authenticated{false};
-    SecurityLevel max_authorized_level;
+    HSMKeySecurityLevel max_authorized_level;
     std::string operator_id;
     
     // Custom copy constructor and assignment operator
@@ -128,7 +128,7 @@ struct HSMSession {
 // Risk assessment for transactions
 struct RiskAssessment {
     double risk_score;             // 0.0 = safe, 1.0 = maximum risk
-    SecurityLevel recommended_level;
+    HSMKeySecurityLevel recommended_level;
     bool requires_multi_sig;
     bool requires_manual_approval;
     std::vector<std::string> risk_factors;
@@ -179,12 +179,12 @@ public:
     bool is_connected() const { return connected_.load(); }
     
     std::string create_session(const std::string& operator_id, const std::string& pin);
-    bool authenticate_session(const std::string& session_id, SecurityLevel max_level);
+    bool authenticate_session(const std::string& session_id, HSMKeySecurityLevel max_level);
     void close_session(const std::string& session_id);
     
     // Key lifecycle management
     std::string generate_key(KeyRole role, const std::string& label, 
-                           SecurityLevel level, const std::string& algorithm = "ECDSA_P256");
+                           HSMKeySecurityLevel level, const std::string& algorithm = "ECDSA_P256");
     bool import_key(const std::string& key_data, KeyRole role, const std::string& label);
     bool delete_key(const std::string& key_id, const std::string& admin_session_id);
     std::vector<KeyInfo> list_keys(KeyRole role = KeyRole::READ_ONLY) const;
@@ -213,7 +213,7 @@ public:
     // Role-based access control
     bool assign_key_role(const std::string& key_id, KeyRole role, const std::string& admin_session_id);
     bool authorize_operation(const std::string& key_id, const std::string& operation,
-                           SecurityLevel level) const;
+                           HSMKeySecurityLevel level) const;
     std::vector<std::string> get_authorized_operations(const std::string& key_id) const;
     
     // Risk management and compliance
@@ -308,7 +308,7 @@ private:
     // Internal methods
     bool connect_to_hsm();
     void disconnect_from_hsm();
-    bool validate_session(const std::string& session_id, SecurityLevel required_level) const;
+    bool validate_session(const std::string& session_id, HSMKeySecurityLevel required_level) const;
     bool validate_key_usage(const std::string& key_id, const std::string& operation) const;
     
     std::string generate_request_id();
@@ -329,7 +329,7 @@ private:
     // Security validation
     bool validate_pin(const std::string& pin) const;
     bool validate_key_algorithm(const std::string& algorithm) const;
-    SecurityLevel calculate_required_security_level(uint64_t value_wei) const;
+    HSMKeySecurityLevel calculate_required_security_level(uint64_t value_wei) const;
     
     // Background maintenance
     void start_maintenance_thread();
@@ -357,8 +357,8 @@ public:
 namespace hsm_utils {
     std::string key_role_to_string(KeyRole role);
     KeyRole string_to_key_role(const std::string& role_str);
-    std::string security_level_to_string(SecurityLevel level);
-    SecurityLevel string_to_security_level(const std::string& level_str);
+    std::string security_level_to_string(HSMKeySecurityLevel level);
+    HSMKeySecurityLevel string_to_security_level(const std::string& level_str);
     
     // Key derivation utilities
     std::string derive_key_label(KeyRole role, const std::string& base_name);

@@ -91,7 +91,7 @@ std::string HSMKeyManager::create_session(const std::string& operator_id, const 
     session.created_at = std::chrono::system_clock::now();
     session.last_activity = session.created_at;
     session.is_authenticated.store(true);
-    session.max_authorized_level = SecurityLevel::MEDIUM; // Default level
+    session.max_authorized_level = HSMKeySecurityLevel::MEDIUM; // Default level
     session.operator_id = operator_id;
     
     {
@@ -106,7 +106,7 @@ std::string HSMKeyManager::create_session(const std::string& operator_id, const 
     return session_id;
 }
 
-bool HSMKeyManager::authenticate_session(const std::string& session_id, SecurityLevel max_level) {
+bool HSMKeyManager::authenticate_session(const std::string& session_id, HSMKeySecurityLevel max_level) {
     std::lock_guard<std::mutex> lock(sessions_mutex_);
     
     auto it = active_sessions_.find(session_id);
@@ -148,7 +148,7 @@ void HSMKeyManager::close_session(const std::string& session_id) {
 }
 
 std::string HSMKeyManager::generate_key(KeyRole role, const std::string& label, 
-                                       SecurityLevel level, const std::string& algorithm) {
+                                       HSMKeySecurityLevel level, const std::string& algorithm) {
     if (!connected_.load()) {
         return "";
     }
@@ -172,7 +172,7 @@ std::string HSMKeyManager::generate_key(KeyRole role, const std::string& label,
     key_info.expires_at = key_info.created_at + config_.key_rotation_interval;
     key_info.usage_counter = 0;
     key_info.is_active = true;
-    key_info.requires_multi_auth = (level >= SecurityLevel::HIGH);
+    key_info.requires_multi_auth = (level >= HSMKeySecurityLevel::HIGH);
     
     // Set authorized operations based on role
     switch (role) {
@@ -299,7 +299,7 @@ SigningResult HSMKeyManager::fast_sign(const std::string& key_id, const std::vec
     auto start_time = std::chrono::high_resolution_clock::now();
     
     // Fast path validation (minimal checks for speed)
-    if (!validate_session(session_id, SecurityLevel::MEDIUM)) {
+    if (!validate_session(session_id, HSMKeySecurityLevel::MEDIUM)) {
         SigningResult result{};
         result.success = false;
         result.error_message = "Invalid session";
@@ -326,7 +326,7 @@ RiskAssessment HSMKeyManager::assess_transaction_risk(const SigningRequest& requ
     
     // Default risk assessment
     assessment.risk_score = 0.1; // Low risk by default
-    assessment.recommended_level = SecurityLevel::MEDIUM;
+    assessment.recommended_level = HSMKeySecurityLevel::MEDIUM;
     assessment.requires_multi_sig = false;
     assessment.requires_manual_approval = false;
     assessment.max_approved_value_wei = 10000000000000000000ULL; // 10 ETH
@@ -335,13 +335,13 @@ RiskAssessment HSMKeyManager::assess_transaction_risk(const SigningRequest& requ
     // Increase risk based on transaction value
     if (request.value_wei > 1000000000000000000ULL) { // > 1 ETH
         assessment.risk_score += 0.3;
-        assessment.recommended_level = SecurityLevel::HIGH;
+        assessment.recommended_level = HSMKeySecurityLevel::HIGH;
     }
     
     if (request.value_wei > 10000000000000000000ULL) { // > 10 ETH
         assessment.risk_score += 0.4;
         assessment.requires_multi_sig = true;
-        assessment.recommended_level = SecurityLevel::CRITICAL;
+        assessment.recommended_level = HSMKeySecurityLevel::CRITICAL;
     }
     
     // MEV operations have higher risk
@@ -451,7 +451,7 @@ void HSMKeyManager::disconnect_from_hsm() {
     // Provider-specific disconnect logic
 }
 
-bool HSMKeyManager::validate_session(const std::string& session_id, SecurityLevel required_level) const {
+bool HSMKeyManager::validate_session(const std::string& session_id, HSMKeySecurityLevel required_level) const {
     std::lock_guard<std::mutex> lock(sessions_mutex_);
     
     auto it = active_sessions_.find(session_id);
@@ -704,22 +704,22 @@ namespace hsm_utils {
         return KeyRole::READ_ONLY;
     }
     
-    std::string security_level_to_string(SecurityLevel level) {
+    std::string security_level_to_string(HSMKeySecurityLevel level) {
         switch (level) {
-            case SecurityLevel::LOW: return "low";
-            case SecurityLevel::MEDIUM: return "medium";
-            case SecurityLevel::HIGH: return "high";
-            case SecurityLevel::CRITICAL: return "critical";
+            case HSMKeySecurityLevel::LOW: return "low";
+            case HSMKeySecurityLevel::MEDIUM: return "medium";
+            case HSMKeySecurityLevel::HIGH: return "high";
+            case HSMKeySecurityLevel::CRITICAL: return "critical";
             default: return "unknown";
         }
     }
     
-    SecurityLevel string_to_security_level(const std::string& level_str) {
-        if (level_str == "low") return SecurityLevel::LOW;
-        if (level_str == "medium") return SecurityLevel::MEDIUM;
-        if (level_str == "high") return SecurityLevel::HIGH;
-        if (level_str == "critical") return SecurityLevel::CRITICAL;
-        return SecurityLevel::MEDIUM;
+    HSMKeySecurityLevel string_to_security_level(const std::string& level_str) {
+        if (level_str == "low") return HSMKeySecurityLevel::LOW;
+        if (level_str == "medium") return HSMKeySecurityLevel::MEDIUM;
+        if (level_str == "high") return HSMKeySecurityLevel::HIGH;
+        if (level_str == "critical") return HSMKeySecurityLevel::CRITICAL;
+        return HSMKeySecurityLevel::MEDIUM;
     }
 }
 

@@ -11,7 +11,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 project(HydraFlow-X
     VERSION 1.0.0
     DESCRIPTION "Ultra-Low Latency DeFi Trading Platform"
-    LANGUAGES CXX
+    LANGUAGES CXX C
 )
 
 # Global configuration options
@@ -49,11 +49,39 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/core-backend/hfx-ultra/include
     ${CMAKE_SOURCE_DIR}/core-backend/hfx-ai/include
     ${CMAKE_SOURCE_DIR}/core-backend/hfx-api/include
+    # Root-level modules
+    ${CMAKE_SOURCE_DIR}/hfx-chain/include
+    ${CMAKE_SOURCE_DIR}/hfx-strat/include
+    ${CMAKE_SOURCE_DIR}/hfx-risk/include
+    ${CMAKE_SOURCE_DIR}/hfx-hedge/include
+    ${CMAKE_SOURCE_DIR}/hfx-hft/include
+    ${CMAKE_SOURCE_DIR}/hfx-mempool/include
+    ${CMAKE_SOURCE_DIR}/hfx-mm/include
+    ${CMAKE_SOURCE_DIR}/hfx-viz/include
 )
 
 # Core backend build
 if(BUILD_CORE_BACKEND)
     message(STATUS "🔧 Building core backend")
+
+    # Add all trading modules
+    add_subdirectory(hfx-db)
+    # add_subdirectory(hfx-chain)  # Temporarily disabled to stop noisy build logs; re-enable after RPC creds
+    add_subdirectory(hfx-strat)
+    add_subdirectory(hfx-risk)
+    add_subdirectory(hfx-auth)
+    # add_subdirectory(hfx-monitor)  # Temporarily disabled due to compilation issues
+    add_subdirectory(hfx-security)
+    add_subdirectory(hfx-backtest)
+    add_subdirectory(hfx-sentiment)
+    add_subdirectory(hfx-mempool)
+    add_subdirectory(hfx-hedge)
+    add_subdirectory(hfx-hft)
+    add_subdirectory(hfx-mm)
+    add_subdirectory(hfx-viz)
+    # add_subdirectory(tests)  # Temporarily disabled for build testing
+
+    # Core backend (depends on above modules)
     add_subdirectory(core-backend)
 endif()
 

@@ -187,11 +187,11 @@ bool TerminalDashboard::initialize() {
     // Setup terminal for raw mode
     setup_terminal();
     
-    std::cout << TerminalColors::CLEAR_SCREEN << TerminalColors::CURSOR_HOME;
-    std::cout << TerminalColors::HIDE_CURSOR;
+    HFX_LOG_INFO(TerminalColors::CLEAR_SCREEN << TerminalColors::CURSOR_HOME;
+    HFX_LOG_INFO(TerminalColors::HIDE_CURSOR;
     
     // Display banner
-    std::cout << TerminalColors::BRIGHT_CYAN << TerminalArt::get_banner() << TerminalColors::RESET << std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_CYAN << TerminalArt::get_banner() << TerminalColors::RESET << std::endl;
     
     running_ = true;
     
@@ -215,11 +215,11 @@ void TerminalDashboard::shutdown() {
     // Restore terminal
     restore_terminal();
     
-    std::cout << TerminalColors::SHOW_CURSOR;
-    std::cout << TerminalColors::CLEAR_SCREEN << TerminalColors::CURSOR_HOME;
-    std::cout << TerminalColors::RESET;
+    HFX_LOG_INFO(TerminalColors::SHOW_CURSOR;
+    HFX_LOG_INFO(TerminalColors::CLEAR_SCREEN << TerminalColors::CURSOR_HOME;
+    HFX_LOG_INFO(TerminalColors::RESET;
     
-    std::cout << "\n" << TerminalColors::BRIGHT_GREEN 
+    HFX_LOG_INFO("\n" << TerminalColors::BRIGHT_GREEN 
               << "Thank you for using HydraFlow-X!" 
               << TerminalColors::RESET << std::endl;
 }
@@ -235,10 +235,10 @@ void TerminalDashboard::run() {
     display_thread_ = std::make_unique<std::thread>(&TerminalDashboard::display_loop, this);
     input_thread_ = std::make_unique<std::thread>(&TerminalDashboard::input_loop, this);
     
-    std::cout << TerminalColors::BRIGHT_GREEN 
+    HFX_LOG_INFO(TerminalColors::BRIGHT_GREEN 
               << "HydraFlow-X Terminal Dashboard Running" 
               << TerminalColors::RESET << std::endl;
-    std::cout << TerminalColors::BRIGHT_YELLOW 
+    HFX_LOG_INFO(TerminalColors::BRIGHT_YELLOW 
               << "Press 'q' to quit, 'h' for help, 't' to cycle themes" 
               << TerminalColors::RESET << std::endl;
     
@@ -267,7 +267,7 @@ void TerminalDashboard::display_loop() {
             update_chart_data();
             
             // Clear screen and render current view
-            std::cout << TerminalColors::CURSOR_HOME;
+            HFX_LOG_INFO(TerminalColors::CURSOR_HOME;
             
             switch (current_view_) {
                 case ViewMode::OVERVIEW:
@@ -360,12 +360,12 @@ void TerminalDashboard::input_loop() {
 
 void TerminalDashboard::render_overview() {
     // Header
-    std::cout << TerminalColors::BRIGHT_CYAN << TerminalColors::BOLD;
-    std::cout << TerminalArt::center_text("═══ HYDRAFLOW-X OVERVIEW ═══", terminal_width_) << std::endl;
-    std::cout << TerminalColors::RESET;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_CYAN << TerminalColors::BOLD;
+    HFX_LOG_INFO(TerminalArt::center_text("═══ HYDRAFLOW-X OVERVIEW ═══", terminal_width_) << std::endl;
+    HFX_LOG_INFO(TerminalColors::RESET;
     
     if (!telemetry_) {
-        std::cout << TerminalColors::BRIGHT_RED 
+        HFX_LOG_INFO(TerminalColors::BRIGHT_RED 
                   << TerminalArt::center_text("⚠️  No telemetry data available", terminal_width_) 
                   << TerminalColors::RESET << std::endl;
         return;
@@ -374,9 +374,9 @@ void TerminalDashboard::render_overview() {
     auto snapshot = telemetry_->get_snapshot();
     
     // Key metrics row
-    std::cout << TerminalColors::BRIGHT_WHITE << "┌─ Key Metrics ─────────────────────────────────────────────────────┐" << std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_WHITE << "┌─ Key Metrics ─────────────────────────────────────────────────────┐" << std::endl;
     
-    std::cout << "│ " << TerminalColors::BRIGHT_GREEN << "P&L: " 
+    HFX_LOG_INFO("│ " << TerminalColors::BRIGHT_GREEN << "P&L: " 
               << TerminalColors::BRIGHT_WHITE << TerminalArt::format_currency(snapshot.metrics.trading.total_pnl_usd.load())
               << TerminalColors::BRIGHT_WHITE << " │ " 
               << TerminalColors::BRIGHT_CYAN << "Latency: " 
@@ -386,56 +386,56 @@ void TerminalDashboard::render_overview() {
               << TerminalColors::BRIGHT_WHITE << snapshot.metrics.trading.total_trades.load()
               << " │" << std::endl;
     
-    std::cout << TerminalColors::BRIGHT_WHITE << "└───────────────────────────────────────────────────────────────────┘" << std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_WHITE << "└───────────────────────────────────────────────────────────────────┘" << std::endl;
     
     // P&L Chart
     if (!pnl_history_.empty()) {
-        std::cout << std::endl << TerminalColors::BRIGHT_GREEN << "P&L Trend: ";
-        std::cout << TerminalColors::BRIGHT_WHITE << TerminalArt::create_sparkline(pnl_history_, 60) << std::endl;
+        HFX_LOG_INFO(std::endl << TerminalColors::BRIGHT_GREEN << "P&L Trend: ";
+        HFX_LOG_INFO(TerminalColors::BRIGHT_WHITE << TerminalArt::create_sparkline(pnl_history_, 60) << std::endl;
     }
     
     // Latency Chart
     if (!latency_history_.empty()) {
-        std::cout << TerminalColors::BRIGHT_CYAN << "Latency:   ";
-        std::cout << TerminalColors::BRIGHT_WHITE << TerminalArt::create_sparkline(latency_history_, 60) << std::endl;
+        HFX_LOG_INFO(TerminalColors::BRIGHT_CYAN << "Latency:   ";
+        HFX_LOG_INFO(TerminalColors::BRIGHT_WHITE << TerminalArt::create_sparkline(latency_history_, 60) << std::endl;
     }
     
     // Status indicators
-    std::cout << std::endl;
-    std::cout << TerminalColors::BRIGHT_WHITE << "Status: ";
+    HFX_LOG_INFO(std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_WHITE << "Status: ";
     
     if (snapshot.metrics.trading.total_trades.load() > 0) {
-        std::cout << TerminalColors::BRIGHT_GREEN << "● ACTIVE ";
+        HFX_LOG_INFO(TerminalColors::BRIGHT_GREEN << "● ACTIVE ";
     } else {
-        std::cout << TerminalColors::BRIGHT_YELLOW << "● IDLE ";
+        HFX_LOG_INFO(TerminalColors::BRIGHT_YELLOW << "● IDLE ";
     }
     
-    std::cout << TerminalColors::BRIGHT_WHITE << "│ Win Rate: ";
+    HFX_LOG_INFO(TerminalColors::BRIGHT_WHITE << "│ Win Rate: ";
     
     auto total_trades = snapshot.metrics.trading.total_trades.load();
     auto successful_trades = snapshot.metrics.trading.successful_arbitrages.load();
     if (total_trades > 0) {
         double win_rate = (double)successful_trades / total_trades * 100.0;
         if (win_rate >= 60) {
-            std::cout << TerminalColors::BRIGHT_GREEN;
+            HFX_LOG_INFO(TerminalColors::BRIGHT_GREEN;
         } else if (win_rate >= 40) {
-            std::cout << TerminalColors::BRIGHT_YELLOW;
+            HFX_LOG_INFO(TerminalColors::BRIGHT_YELLOW;
         } else {
-            std::cout << TerminalColors::BRIGHT_RED;
+            HFX_LOG_INFO(TerminalColors::BRIGHT_RED;
         }
-        std::cout << TerminalArt::format_percentage(win_rate);
+        HFX_LOG_INFO(TerminalArt::format_percentage(win_rate);
     } else {
-        std::cout << TerminalColors::BRIGHT_WHITE << "N/A";
+        HFX_LOG_INFO(TerminalColors::BRIGHT_WHITE << "N/A";
     }
     
-    std::cout << TerminalColors::RESET << std::endl;
+    HFX_LOG_INFO(TerminalColors::RESET << std::endl;
 }
 
 void TerminalDashboard::render_status_bar() {
     // Move to bottom of screen
-    std::cout << "\033[" << terminal_height_ << ";1H";
+    HFX_LOG_INFO("\033[" << terminal_height_ << ";1H";
     
-    std::cout << TerminalColors::BG_BLUE << TerminalColors::BRIGHT_WHITE;
+    HFX_LOG_INFO(TerminalColors::BG_BLUE << TerminalColors::BRIGHT_WHITE;
     
     // View mode indicator
     std::string view_name;
@@ -467,7 +467,7 @@ void TerminalDashboard::render_status_bar() {
         status_str += std::string(terminal_width_ - status_str.length(), ' ');
     }
     
-    std::cout << status_str << TerminalColors::RESET << std::endl;
+    HFX_LOG_INFO(status_str << TerminalColors::RESET << std::endl;
 }
 
 void TerminalDashboard::get_terminal_size() {
@@ -563,37 +563,37 @@ void TerminalDashboard::add_log_message(const std::string& message, int severity
 }
 
 void TerminalDashboard::render_trading_view() {
-    std::cout << TerminalColors::BRIGHT_GREEN << TerminalColors::BOLD;
-    std::cout << TerminalArt::center_text("═══ TRADING OVERVIEW ═══", terminal_width_) << std::endl;
-    std::cout << TerminalColors::RESET;
-    std::cout << TerminalColors::BRIGHT_YELLOW << "Trading view - Coming soon!" << TerminalColors::RESET << std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_GREEN << TerminalColors::BOLD;
+    HFX_LOG_INFO(TerminalArt::center_text("═══ TRADING OVERVIEW ═══", terminal_width_) << std::endl;
+    HFX_LOG_INFO(TerminalColors::RESET;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_YELLOW << "Trading view - Coming soon!" << TerminalColors::RESET << std::endl;
 }
 
 void TerminalDashboard::render_risk_view() {
-    std::cout << TerminalColors::BRIGHT_RED << TerminalColors::BOLD;
-    std::cout << TerminalArt::center_text("═══ RISK MANAGEMENT ═══", terminal_width_) << std::endl;
-    std::cout << TerminalColors::RESET;
-    std::cout << TerminalColors::BRIGHT_YELLOW << "Risk view - Coming soon!" << TerminalColors::RESET << std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_RED << TerminalColors::BOLD;
+    HFX_LOG_INFO(TerminalArt::center_text("═══ RISK MANAGEMENT ═══", terminal_width_) << std::endl;
+    HFX_LOG_INFO(TerminalColors::RESET;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_YELLOW << "Risk view - Coming soon!" << TerminalColors::RESET << std::endl;
 }
 
 void TerminalDashboard::render_network_view() {
-    std::cout << TerminalColors::BRIGHT_BLUE << TerminalColors::BOLD;
-    std::cout << TerminalArt::center_text("═══ NETWORK STATUS ═══", terminal_width_) << std::endl;
-    std::cout << TerminalColors::RESET;
-    std::cout << TerminalColors::BRIGHT_YELLOW << "Network view - Coming soon!" << TerminalColors::RESET << std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_BLUE << TerminalColors::BOLD;
+    HFX_LOG_INFO(TerminalArt::center_text("═══ NETWORK STATUS ═══", terminal_width_) << std::endl;
+    HFX_LOG_INFO(TerminalColors::RESET;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_YELLOW << "Network view - Coming soon!" << TerminalColors::RESET << std::endl;
 }
 
 void TerminalDashboard::render_performance_view() {
-    std::cout << TerminalColors::BRIGHT_MAGENTA << TerminalColors::BOLD;
-    std::cout << TerminalArt::center_text("═══ PERFORMANCE MONITORING ═══", terminal_width_) << std::endl;
-    std::cout << TerminalColors::RESET;
-    std::cout << TerminalColors::BRIGHT_YELLOW << "Performance view - Coming soon!" << TerminalColors::RESET << std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_MAGENTA << TerminalColors::BOLD;
+    HFX_LOG_INFO(TerminalArt::center_text("═══ PERFORMANCE MONITORING ═══", terminal_width_) << std::endl;
+    HFX_LOG_INFO(TerminalColors::RESET;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_YELLOW << "Performance view - Coming soon!" << TerminalColors::RESET << std::endl;
 }
 
 void TerminalDashboard::render_logs_view() {
-    std::cout << TerminalColors::BRIGHT_WHITE << TerminalColors::BOLD;
-    std::cout << TerminalArt::center_text("═══ LOG STREAM ═══", terminal_width_) << std::endl;
-    std::cout << TerminalColors::RESET;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_WHITE << TerminalColors::BOLD;
+    HFX_LOG_INFO(TerminalArt::center_text("═══ LOG STREAM ═══", terminal_width_) << std::endl;
+    HFX_LOG_INFO(TerminalColors::RESET;
     
     // Display recent log messages
     int display_count = std::min(static_cast<int>(log_buffer_.size()), terminal_height_ - 5);
@@ -608,33 +608,33 @@ void TerminalDashboard::render_logs_view() {
             default: color = TerminalColors::BRIGHT_WHITE; break;
         }
         
-        std::cout << color << entry.message << TerminalColors::RESET << std::endl;
+        HFX_LOG_INFO(color << entry.message << TerminalColors::RESET << std::endl;
     }
 }
 
 void TerminalDashboard::render_help_view() {
-    std::cout << TerminalColors::BRIGHT_CYAN << TerminalColors::BOLD;
-    std::cout << TerminalArt::center_text("═══ HELP & SHORTCUTS ═══", terminal_width_) << std::endl;
-    std::cout << TerminalColors::RESET << std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_CYAN << TerminalColors::BOLD;
+    HFX_LOG_INFO(TerminalArt::center_text("═══ HELP & SHORTCUTS ═══", terminal_width_) << std::endl;
+    HFX_LOG_INFO(TerminalColors::RESET << std::endl;
     
-    std::cout << TerminalColors::BRIGHT_WHITE << "Navigation:" << TerminalColors::RESET << std::endl;
-    std::cout << "  " << TerminalColors::BRIGHT_YELLOW << "1" << TerminalColors::RESET << " - Overview" << std::endl;
-    std::cout << "  " << TerminalColors::BRIGHT_YELLOW << "2" << TerminalColors::RESET << " - Trading" << std::endl;
-    std::cout << "  " << TerminalColors::BRIGHT_YELLOW << "3" << TerminalColors::RESET << " - Risk Management" << std::endl;
-    std::cout << "  " << TerminalColors::BRIGHT_YELLOW << "4" << TerminalColors::RESET << " - Network Status" << std::endl;
-    std::cout << "  " << TerminalColors::BRIGHT_YELLOW << "5" << TerminalColors::RESET << " - Performance" << std::endl;
-    std::cout << "  " << TerminalColors::BRIGHT_YELLOW << "6" << TerminalColors::RESET << " - Logs" << std::endl;
-    std::cout << std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_WHITE << "Navigation:" << TerminalColors::RESET << std::endl;
+    HFX_LOG_INFO("  " << TerminalColors::BRIGHT_YELLOW << "1" << TerminalColors::RESET << " - Overview" << std::endl;
+    HFX_LOG_INFO("  " << TerminalColors::BRIGHT_YELLOW << "2" << TerminalColors::RESET << " - Trading" << std::endl;
+    HFX_LOG_INFO("  " << TerminalColors::BRIGHT_YELLOW << "3" << TerminalColors::RESET << " - Risk Management" << std::endl;
+    HFX_LOG_INFO("  " << TerminalColors::BRIGHT_YELLOW << "4" << TerminalColors::RESET << " - Network Status" << std::endl;
+    HFX_LOG_INFO("  " << TerminalColors::BRIGHT_YELLOW << "5" << TerminalColors::RESET << " - Performance" << std::endl;
+    HFX_LOG_INFO("  " << TerminalColors::BRIGHT_YELLOW << "6" << TerminalColors::RESET << " - Logs" << std::endl;
+    HFX_LOG_INFO(std::endl;
     
-    std::cout << TerminalColors::BRIGHT_WHITE << "Controls:" << TerminalColors::RESET << std::endl;
-    std::cout << "  " << TerminalColors::BRIGHT_YELLOW << "p" << TerminalColors::RESET << " - Pause/Resume updates" << std::endl;
-    std::cout << "  " << TerminalColors::BRIGHT_YELLOW << "t" << TerminalColors::RESET << " - Cycle themes" << std::endl;
-    std::cout << "  " << TerminalColors::BRIGHT_YELLOW << "h" << TerminalColors::RESET << " - Show this help" << std::endl;
-    std::cout << "  " << TerminalColors::BRIGHT_YELLOW << "q" << TerminalColors::RESET << " - Quit dashboard" << std::endl;
-    std::cout << "  " << TerminalColors::BRIGHT_YELLOW << "ESC" << TerminalColors::RESET << " - Emergency exit" << std::endl;
-    std::cout << std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_WHITE << "Controls:" << TerminalColors::RESET << std::endl;
+    HFX_LOG_INFO("  " << TerminalColors::BRIGHT_YELLOW << "p" << TerminalColors::RESET << " - Pause/Resume updates" << std::endl;
+    HFX_LOG_INFO("  " << TerminalColors::BRIGHT_YELLOW << "t" << TerminalColors::RESET << " - Cycle themes" << std::endl;
+    HFX_LOG_INFO("  " << TerminalColors::BRIGHT_YELLOW << "h" << TerminalColors::RESET << " - Show this help" << std::endl;
+    HFX_LOG_INFO("  " << TerminalColors::BRIGHT_YELLOW << "q" << TerminalColors::RESET << " - Quit dashboard" << std::endl;
+    HFX_LOG_INFO("  " << TerminalColors::BRIGHT_YELLOW << "ESC" << TerminalColors::RESET << " - Emergency exit" << std::endl;
+    HFX_LOG_INFO(std::endl;
     
-    std::cout << TerminalColors::BRIGHT_GREEN << "Press any view key (1-6) to return to dashboard..." << TerminalColors::RESET << std::endl;
+    HFX_LOG_INFO(TerminalColors::BRIGHT_GREEN << "Press any view key (1-6) to return to dashboard..." << TerminalColors::RESET << std::endl;
 }
 
 void TerminalDashboard::set_view_mode(ViewMode mode) {

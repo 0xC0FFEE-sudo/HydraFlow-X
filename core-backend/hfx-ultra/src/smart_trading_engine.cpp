@@ -1,4 +1,5 @@
 #include "smart_trading_engine.hpp"
+#include "hfx-log/include/logger.hpp"
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -198,7 +199,7 @@ bool SmartTradingEngine::add_wallet(const std::string& private_key) {
     
     // Validate private key format (basic validation for demo)
     if (private_key.length() < 64 || private_key.length() > 66) {
-        std::cerr << "❌ Invalid private key format (expected 64-66 characters)" << std::endl;
+        HFX_LOG_ERROR("❌ Invalid private key format (expected 64-66 characters)");
         return false;
     }
     
@@ -208,7 +209,7 @@ bool SmartTradingEngine::add_wallet(const std::string& private_key) {
     // Check if wallet already exists
     for (const auto& existing_wallet : managed_wallets_) {
         if (existing_wallet.address == wallet_address) {
-            std::cerr << "⚠️  Wallet " << wallet_address << " already exists" << std::endl;
+            HFX_LOG_ERROR("⚠️  Wallet " + wallet_address + " already exists");
             return false;
         }
     }
@@ -231,8 +232,8 @@ bool SmartTradingEngine::add_wallet(const std::string& private_key) {
         primary_wallet_address_ = wallet_address;
     }
     
-    std::cout << "✅ Successfully added wallet: " << wallet_address 
-              << " (Balance: " << wallet.balance_sol << " SOL)" << std::endl;
+    HFX_LOG_INFO("✅ Successfully added wallet: " + wallet_address + 
+              " (Balance: " + std::to_string(wallet.balance_sol) + " SOL)");
     
     return true;
 }
@@ -586,8 +587,8 @@ bool SmartTradingEngine::send_transaction(const std::string& from_wallet, const 
     // 2. Submit to Solana RPC
     // 3. Wait for confirmation
     
-    std::cout << "📤 Sending transaction from wallet: " << from_wallet << std::endl;
-    std::cout << "    Transaction data: " << transaction_data.substr(0, 32) << "..." << std::endl;
+    HFX_LOG_INFO("📤 Sending transaction from wallet: " + from_wallet);
+    HFX_LOG_INFO("    Transaction data: " + transaction_data.substr(0, 32) + "...");
     
     // Simulate network delay
     std::this_thread::sleep_for(std::chrono::milliseconds(50 + (rand() % 200)));

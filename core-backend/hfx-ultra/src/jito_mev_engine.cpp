@@ -1,4 +1,5 @@
 #include "jito_mev_engine.hpp"
+#include "hfx-log/include/logger.hpp"
 #include <thread>
 #include <chrono>
 #include <random>
@@ -28,8 +29,8 @@ JitoMEVEngine::JitoMEVEngine(const JitoBundleConfig& config)
     // Precompute some common Solana addresses for MEV detection
     initializeCommonAddresses();
     
-    std::cout << "🚀 Jito MEV Engine initialized with "
-              << config_.worker_threads << " worker threads" << std::endl;
+    HFX_LOG_INFO("🚀 Jito MEV Engine initialized with " 
+              + std::to_string(config_.worker_threads) + " worker threads");
 }
 
 JitoMEVEngine::~JitoMEVEngine() {
@@ -72,13 +73,13 @@ void JitoMEVEngine::stop() {
 
 std::string JitoMEVEngine::create_bundle(const std::vector<std::string>& transactions, const JitoBundleConfig& config) {
     if (transactions.empty()) {
-        std::cerr << "❌ Cannot create bundle with no transactions" << std::endl;
+        HFX_LOG_ERROR("❌ Cannot create bundle with no transactions");
         return "";
     }
     
     if (transactions.size() > config.max_bundle_size) {
-        std::cerr << "❌ Bundle too large: " << transactions.size() 
-                  << " transactions (max: " << config.max_bundle_size << ")" << std::endl;
+        HFX_LOG_ERROR("❌ Bundle too large: " + std::to_string(transactions.size()) + 
+                  " transactions (max: " + std::to_string(config.max_bundle_size) + ")");
         return "";
     }
     
@@ -101,7 +102,7 @@ std::string JitoMEVEngine::create_bundle(const std::vector<std::string>& transac
         SolanaTransaction tx = parseTransaction(transactions[i]);
         
         if (tx.signature.empty()) {
-            std::cerr << "❌ Failed to parse transaction " << i << std::endl;
+            HFX_LOG_ERROR("❌ Failed to parse transaction " + std::to_string(i));
             continue;
         }
         
@@ -116,14 +117,14 @@ std::string JitoMEVEngine::create_bundle(const std::vector<std::string>& transac
     }
     
     if (bundle.transactions.empty()) {
-        std::cerr << "❌ No valid transactions in bundle" << std::endl;
+        HFX_LOG_ERROR("❌ No valid transactions in bundle");
         return "";
     }
     
     // Validate bundle constraints
     if (total_compute_units > config.max_compute_units) {
-        std::cerr << "❌ Bundle exceeds compute unit limit: " << total_compute_units 
-                  << " (max: " << config.max_compute_units << ")" << std::endl;
+        HFX_LOG_ERROR("❌ Bundle exceeds compute unit limit: " + std::to_string(total_compute_units) + 
+                  " (max: " + std::to_string(config.max_compute_units) + ")");
         return "";
     }
     
@@ -148,9 +149,11 @@ std::string JitoMEVEngine::create_bundle(const std::vector<std::string>& transac
     metrics_.bundles_created.fetch_add(1);
     metrics_.total_mev_extracted.store(metrics_.total_mev_extracted.load() + estimated_mev_value);
     
-    std::cout << "📦 Created bundle " << bundle_id.substr(0, 8) << "... with " 
-              << bundle.transactions.size() << " transactions (Est. MEV: $" 
-              << std::fixed << std::setprecision(2) << estimated_mev_value << ")" << std::endl;
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2) << estimated_mev_value;
+    HFX_LOG_INFO("📦 Created bundle " + bundle_id.substr(0, 8) + "... with " 
+              + std::to_string(bundle.transactions.size()) + " transactions (Est. MEV: $" 
+              + oss.str() + ")");
     
     return bundle_id;
 }

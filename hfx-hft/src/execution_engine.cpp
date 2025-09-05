@@ -147,7 +147,7 @@ public:
             return false;
         }
         
-        std::cout << "[ExecutionEngine] Initializing ultra-low latency execution engine..." << std::endl;
+        HFX_LOG_INFO("[ExecutionEngine] Initializing ultra-low latency execution engine...");
         
         // Set up real-time scheduling if enabled
         if (config_.enable_real_time_priority) {
@@ -172,8 +172,8 @@ public:
             worker_threads_.push_back(std::move(thread));
         }
         
-        std::cout << "[ExecutionEngine] Initialized with " << config_.worker_threads 
-                  << " worker threads" << std::endl;
+        HFX_LOG_INFO("[ExecutionEngine] Initialized with " + std::to_string(config_.worker_threads) 
+                  + " worker threads");
         return true;
     }
     
@@ -192,7 +192,7 @@ public:
         }
         worker_threads_.clear();
         
-        std::cout << "[ExecutionEngine] Shutdown complete" << std::endl;
+        HFX_LOG_INFO("[ExecutionEngine] Shutdown complete");
     }
     
     bool submit_command(const ExecutionCommand& cmd) noexcept {
@@ -240,7 +240,7 @@ public:
     }
     
     void worker_loop(size_t worker_id) {
-        std::cout << "[ExecutionEngine] Worker " << worker_id << " started" << std::endl;
+        HFX_LOG_INFO("[ExecutionEngine] Worker " + std::to_string(worker_id) + " started");
         
         ExecutionCommand cmd;
         ExecutionResult result;
@@ -288,7 +288,7 @@ public:
             call_latency_callback(latency_ns);
         }
         
-        std::cout << "[ExecutionEngine] Worker " << worker_id << " stopped" << std::endl;
+        HFX_LOG_INFO("[ExecutionEngine] Worker " + std::to_string(worker_id) + " stopped");
     }
     
     bool execute_command(const ExecutionCommand& cmd, ExecutionResult& result) {
@@ -382,7 +382,7 @@ public:
         );
         
         if (result == KERN_SUCCESS) {
-            std::cout << "[ExecutionEngine] Real-time scheduling enabled" << std::endl;
+            HFX_LOG_INFO("[ExecutionEngine] Real-time scheduling enabled");
         }
 #elif defined(__linux__)
         // Linux real-time scheduling
@@ -390,7 +390,7 @@ public:
         param.sched_priority = 99; // Highest RT priority
         
         if (sched_setscheduler(0, SCHED_FIFO, &param) == 0) {
-            std::cout << "[ExecutionEngine] Real-time scheduling enabled" << std::endl;
+            HFX_LOG_INFO("[ExecutionEngine] Real-time scheduling enabled");
         }
 #endif
     }
@@ -398,11 +398,11 @@ public:
     void lock_memory_pages() {
 #ifdef __linux__
         if (mlockall(MCL_CURRENT | MCL_FUTURE) == 0) {
-            std::cout << "[ExecutionEngine] Memory pages locked" << std::endl;
+            HFX_LOG_INFO("[ExecutionEngine] Memory pages locked");
         }
 #elif defined(__APPLE__)
         // macOS doesn't have mlockall, but we can lock specific pages
-        std::cout << "[ExecutionEngine] Memory locking attempted (limited on macOS)" << std::endl;
+        HFX_LOG_INFO("[ExecutionEngine] Memory locking attempted (limited on macOS)");
 #endif
     }
     
@@ -414,7 +414,7 @@ public:
         
         pthread_t native_thread = thread.native_handle();
         if (pthread_setaffinity_np(native_thread, sizeof(cpu_set_t), &cpuset) == 0) {
-            std::cout << "[ExecutionEngine] Thread affinity set to CPU " << cpu_core << std::endl;
+            HFX_LOG_INFO("[ExecutionEngine] Thread affinity set to CPU " + std::to_string(cpu_core));
         }
 #elif defined(__APPLE__)
         // macOS thread affinity is more limited
@@ -428,7 +428,7 @@ public:
             THREAD_AFFINITY_POLICY_COUNT
         );
         
-        std::cout << "[ExecutionEngine] Thread affinity set to CPU " << cpu_core << " (macOS)" << std::endl;
+        HFX_LOG_INFO("[ExecutionEngine] Thread affinity set to CPU " + std::to_string(cpu_core) + " (macOS)");
 #endif
     }
 };
@@ -501,17 +501,17 @@ void UltraFastExecutionEngine::reset_metrics() {
 void UltraFastExecutionEngine::emergency_stop_all() {
     pimpl_->emergency_stopped_.store(true);
     pimpl_->metrics_.emergency_stops.fetch_add(1);
-    std::cout << "[ExecutionEngine] 🚨 EMERGENCY STOP ACTIVATED 🚨" << std::endl;
+    HFX_LOG_INFO("[ExecutionEngine] 🚨 EMERGENCY STOP ACTIVATED 🚨");
 }
 
 void UltraFastExecutionEngine::pause_execution() {
     pimpl_->paused_.store(true);
-    std::cout << "[ExecutionEngine] Execution paused" << std::endl;
+    HFX_LOG_INFO("[ExecutionEngine] Execution paused");
 }
 
 void UltraFastExecutionEngine::resume_execution() {
     pimpl_->paused_.store(false);
-    std::cout << "[ExecutionEngine] Execution resumed" << std::endl;
+    HFX_LOG_INFO("[ExecutionEngine] Execution resumed");
 }
 
 void UltraFastExecutionEngine::set_latency_callback(LatencyCallback callback) {

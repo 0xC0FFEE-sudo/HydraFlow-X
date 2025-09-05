@@ -23,6 +23,136 @@
 namespace hfx::hft {
 
 // ============================================================================
+// MemecoinExecutionEngine Implementation
+// ============================================================================
+
+class MemecoinExecutionEngine::ExecutionImpl {
+public:
+    std::unordered_map<TradingPlatform, std::unique_ptr<IPlatformIntegration>> platforms_;
+    std::vector<MemecoinToken> watched_tokens_;
+    std::mutex tokens_mutex_;
+    ExecutionMetrics metrics_;
+
+    ExecutionImpl() = default;
+};
+
+MemecoinExecutionEngine::MemecoinExecutionEngine()
+    : pimpl_(std::make_unique<ExecutionImpl>()) {
+}
+
+MemecoinExecutionEngine::~MemecoinExecutionEngine() = default;
+
+void MemecoinExecutionEngine::add_platform(TradingPlatform platform, std::unique_ptr<IPlatformIntegration> integration) {
+    pimpl_->platforms_[platform] = std::move(integration);
+}
+
+void MemecoinExecutionEngine::remove_platform(TradingPlatform platform) {
+    pimpl_->platforms_.erase(platform);
+}
+
+void MemecoinExecutionEngine::start_token_discovery() {
+    // Stub implementation
+}
+
+void MemecoinExecutionEngine::stop_token_discovery() {
+    // Stub implementation
+}
+
+void MemecoinExecutionEngine::add_token_watch(const std::string& token_address) {
+    std::lock_guard<std::mutex> lock(pimpl_->tokens_mutex_);
+    // Stub implementation - add token to watch list
+}
+
+void MemecoinExecutionEngine::remove_token_watch(const std::string& token_address) {
+    std::lock_guard<std::mutex> lock(pimpl_->tokens_mutex_);
+    // Stub implementation - remove token from watch list
+}
+
+void MemecoinExecutionEngine::enable_sniper_mode(double max_buy_amount, double target_profit_percent) {
+    // Stub implementation
+}
+
+void MemecoinExecutionEngine::enable_smart_money_copy(double copy_percentage, uint64_t max_delay_ms) {
+    // Stub implementation
+}
+
+void MemecoinExecutionEngine::enable_mev_protection(bool use_private_mempools) {
+    // Stub implementation
+}
+
+MemecoinTradeResult MemecoinExecutionEngine::execute_cross_platform_trade(const MemecoinTradeParams& params) {
+    MemecoinTradeResult result;
+    result.success = false;
+    result.error_message = "Not implemented";
+    return result;
+}
+
+MemecoinTradeResult MemecoinExecutionEngine::snipe_new_token(const MemecoinToken& token, double buy_amount) {
+    MemecoinTradeResult result;
+    result.success = false;
+    result.error_message = "Not implemented";
+    return result;
+}
+
+std::unordered_map<std::string, double> MemecoinExecutionEngine::get_consolidated_portfolio() {
+    return {};
+}
+
+void MemecoinExecutionEngine::rebalance_across_platforms() {
+    // Stub implementation
+}
+
+void MemecoinExecutionEngine::get_metrics(ExecutionMetrics& metrics_out) const {
+    // Copy atomic values individually since atomic types cannot be copy assigned
+    metrics_out.total_trades.store(pimpl_->metrics_.total_trades.load());
+    metrics_out.successful_snipes.store(pimpl_->metrics_.successful_snipes.load());
+    metrics_out.avg_execution_latency_ns.store(pimpl_->metrics_.avg_execution_latency_ns.load());
+    metrics_out.total_pnl.store(pimpl_->metrics_.total_pnl.load());
+    metrics_out.mev_attacks_avoided.store(pimpl_->metrics_.mev_attacks_avoided.load());
+}
+
+void MemecoinExecutionEngine::register_new_token_callback(NewTokenCallback callback) {
+    // Stub implementation
+}
+
+void MemecoinExecutionEngine::register_price_update_callback(PriceUpdateCallback callback) {
+    // Stub implementation
+}
+
+void MemecoinExecutionEngine::register_trade_complete_callback(TradeCompleteCallback callback) {
+    // Stub implementation
+}
+
+// ============================================================================
+// MemecoinScanner Implementation
+// ============================================================================
+
+class MemecoinScanner::ScannerImpl {
+public:
+    std::atomic<bool> scanning_{false};
+    std::vector<MemecoinToken> discovered_tokens_;
+    std::mutex tokens_mutex_;
+};
+
+MemecoinScanner::MemecoinScanner(const ScannerConfig& config)
+    : pimpl_(std::make_unique<ScannerImpl>()) {
+}
+
+MemecoinScanner::~MemecoinScanner() = default;
+
+void MemecoinScanner::start_scanning() {
+    pimpl_->scanning_.store(true);
+}
+
+void MemecoinScanner::stop_scanning() {
+    pimpl_->scanning_.store(false);
+}
+
+void MemecoinScanner::set_new_token_callback(std::function<void(const MemecoinToken&)> callback) {
+    // Stub implementation
+}
+
+// ============================================================================
 // Axiom Pro Integration Implementation
 // ============================================================================
 
@@ -46,11 +176,11 @@ public:
     }
     
     bool connect() {
-        std::cout << "[AxiomPro] Connecting to Axiom Pro API..." << std::endl;
+        HFX_LOG_INFO("[AxiomPro] Connecting to Axiom Pro API...");
         
         // Simulate API connection with validation
         if (api_key_.empty()) {
-            std::cout << "[AxiomPro] ERROR: API key is required" << std::endl;
+            HFX_LOG_INFO("[AxiomPro] ERROR: API key is required");
             return false;
         }
         
@@ -59,7 +189,7 @@ public:
         monitor_thread_ = std::make_unique<std::thread>(&AxiomImpl::monitoring_loop, this);
         
         connected_.store(true);
-        std::cout << "[AxiomPro] Connected successfully" << std::endl;
+        HFX_LOG_INFO("[AxiomPro] Connected successfully");
         return true;
     }
     
@@ -71,7 +201,7 @@ public:
             monitor_thread_->join();
         }
         
-        std::cout << "[AxiomPro] Disconnected" << std::endl;
+        HFX_LOG_INFO("[AxiomPro] Disconnected");
     }
     
     void monitoring_loop() {
@@ -108,7 +238,7 @@ public:
                 watched_tokens_.push_back(token);
             }
             
-            std::cout << "[AxiomPro] New token discovered: " << token.symbol 
+            HFX_LOG_INFO("[AxiomPro] New token discovered: " << token.symbol 
                       << " @ " << token.contract_address << std::endl;
         }
     }
@@ -151,7 +281,7 @@ public:
         result.sandwich_detected = false;
         result.mev_loss_percent = 0.0;
         
-        std::cout << "[AxiomPro] Trade executed in " << result.execution_latency_ns / 1000 
+        HFX_LOG_INFO("[AxiomPro] Trade executed in " << result.execution_latency_ns / 1000 
                   << "μs - Hash: " << result.transaction_hash << std::endl;
         
         return result;
@@ -176,11 +306,11 @@ bool AxiomProIntegration::is_connected() const {
 }
 
 void AxiomProIntegration::subscribe_to_new_tokens() {
-    std::cout << "[AxiomPro] Subscribed to new token alerts" << std::endl;
+    HFX_LOG_INFO("[AxiomPro] Subscribed to new token alerts");
 }
 
 void AxiomProIntegration::subscribe_to_price_updates(const std::string& token_address) {
-    std::cout << "[AxiomPro] Subscribed to price updates for " << token_address << std::endl;
+    HFX_LOG_INFO("[AxiomPro] Subscribed to price updates for " << token_address << std::endl;
 }
 
 MemecoinMarketData AxiomProIntegration::get_market_data(const std::string& token_address) {
@@ -206,7 +336,7 @@ MemecoinTradeResult AxiomProIntegration::execute_trade(const MemecoinTradeParams
 }
 
 bool AxiomProIntegration::cancel_pending_orders(const std::string& token_address) {
-    std::cout << "[AxiomPro] Cancelled pending orders for " << token_address << std::endl;
+    HFX_LOG_INFO("[AxiomPro] Cancelled pending orders for " << token_address << std::endl;
     return true;
 }
 
@@ -243,22 +373,22 @@ public:
         : telegram_bot_token_(telegram_bot_token), rpc_endpoint_(rpc_endpoint) {}
     
     bool connect() {
-        std::cout << "[PhotonSol] Connecting to Photon Solana Bot..." << std::endl;
+        HFX_LOG_INFO("[PhotonSol] Connecting to Photon Solana Bot...");
         
         // Simulate Solana RPC connection
         if (rpc_endpoint_.empty()) {
-            std::cout << "[PhotonSol] ERROR: RPC endpoint required" << std::endl;
+            HFX_LOG_INFO("[PhotonSol] ERROR: RPC endpoint required");
             return false;
         }
         
         connected_.store(true);
-        std::cout << "[PhotonSol] Connected to Solana RPC: " << rpc_endpoint_ << std::endl;
+        HFX_LOG_INFO("[PhotonSol] Connected to Solana RPC: " << rpc_endpoint_ << std::endl;
         return true;
     }
     
     void disconnect() {
         connected_.store(false);
-        std::cout << "[PhotonSol] Disconnected from Solana" << std::endl;
+        HFX_LOG_INFO("[PhotonSol] Disconnected from Solana");
     }
     
     MemecoinTradeResult execute_solana_trade(const MemecoinTradeParams& params) {
@@ -293,7 +423,7 @@ public:
             result.sandwich_detected = (std::rand() % 20 == 0);
         }
         
-        std::cout << "[PhotonSol] Solana trade executed in " << result.execution_latency_ns / 1000 
+        HFX_LOG_INFO("[PhotonSol] Solana trade executed in " << result.execution_latency_ns / 1000 
                   << "μs - Hash: " << result.transaction_hash << std::endl;
         
         return result;
@@ -329,11 +459,11 @@ bool PhotonSolIntegration::is_connected() const {
 }
 
 void PhotonSolIntegration::subscribe_to_new_tokens() {
-    std::cout << "[PhotonSol] Subscribed to new Solana token launches" << std::endl;
+    HFX_LOG_INFO("[PhotonSol] Subscribed to new Solana token launches");
 }
 
 void PhotonSolIntegration::subscribe_to_price_updates(const std::string& token_address) {
-    std::cout << "[PhotonSol] Subscribed to Solana price updates for " << token_address << std::endl;
+    HFX_LOG_INFO("[PhotonSol] Subscribed to Solana price updates for " << token_address << std::endl;
 }
 
 MemecoinMarketData PhotonSolIntegration::get_market_data(const std::string& token_address) {
@@ -360,7 +490,7 @@ MemecoinTradeResult PhotonSolIntegration::execute_trade(const MemecoinTradeParam
 }
 
 bool PhotonSolIntegration::cancel_pending_orders(const std::string& token_address) {
-    std::cout << "[PhotonSol] Cancelled Solana orders for " << token_address << std::endl;
+    HFX_LOG_INFO("[PhotonSol] Cancelled Solana orders for " << token_address << std::endl;
     return true;
 }
 
@@ -385,7 +515,7 @@ std::unordered_map<std::string, std::string> PhotonSolIntegration::get_platform_
 }
 
 void PhotonSolIntegration::set_jito_bundle_settings(double tip_lamports, bool use_priority_fees) {
-    std::cout << "[PhotonSol] Jito bundle settings: tip=" << tip_lamports 
+    HFX_LOG_INFO("[PhotonSol] Jito bundle settings: tip=" << tip_lamports 
               << " lamports, priority_fees=" << use_priority_fees << std::endl;
 }
 
@@ -408,21 +538,21 @@ public:
         : api_key_(api_key), secret_(secret) {}
     
     bool connect() {
-        std::cout << "[BullX] Connecting to BullX Trading Platform..." << std::endl;
+        HFX_LOG_INFO("[BullX] Connecting to BullX Trading Platform...");
         
         if (api_key_.empty() || secret_.empty()) {
-            std::cout << "[BullX] ERROR: API key and secret required" << std::endl;
+            HFX_LOG_INFO("[BullX] ERROR: API key and secret required");
             return false;
         }
         
         connected_.store(true);
-        std::cout << "[BullX] Connected successfully" << std::endl;
+        HFX_LOG_INFO("[BullX] Connected successfully");
         return true;
     }
     
     void disconnect() {
         connected_.store(false);
-        std::cout << "[BullX] Disconnected" << std::endl;
+        HFX_LOG_INFO("[BullX] Disconnected");
     }
     
     MemecoinTradeResult execute_bullx_trade(const MemecoinTradeParams& params) {
@@ -451,7 +581,7 @@ public:
         result.sandwich_detected = (std::rand() % 200 == 0);
         result.mev_loss_percent = 0.05 + (std::rand() % 3) / 10.0;
         
-        std::cout << "[BullX] Trade executed in " << result.execution_latency_ns / 1000 
+        HFX_LOG_INFO("[BullX] Trade executed in " << result.execution_latency_ns / 1000 
                   << "μs - Hash: " << result.transaction_hash << std::endl;
         
         return result;
@@ -476,11 +606,11 @@ bool BullXIntegration::is_connected() const {
 }
 
 void BullXIntegration::subscribe_to_new_tokens() {
-    std::cout << "[BullX] Subscribed to new token discoveries" << std::endl;
+    HFX_LOG_INFO("[BullX] Subscribed to new token discoveries");
 }
 
 void BullXIntegration::subscribe_to_price_updates(const std::string& token_address) {
-    std::cout << "[BullX] Subscribed to price updates for " << token_address << std::endl;
+    HFX_LOG_INFO("[BullX] Subscribed to price updates for " << token_address << std::endl;
 }
 
 MemecoinMarketData BullXIntegration::get_market_data(const std::string& token_address) {
@@ -506,7 +636,7 @@ MemecoinTradeResult BullXIntegration::execute_trade(const MemecoinTradeParams& p
 }
 
 bool BullXIntegration::cancel_pending_orders(const std::string& token_address) {
-    std::cout << "[BullX] Cancelled orders for " << token_address << std::endl;
+    HFX_LOG_INFO("[BullX] Cancelled orders for " << token_address << std::endl;
     return true;
 }
 
@@ -531,7 +661,7 @@ std::unordered_map<std::string, std::string> BullXIntegration::get_platform_capa
 }
 
 void BullXIntegration::enable_smart_money_tracking() {
-    std::cout << "[BullX] Smart money tracking enabled" << std::endl;
+    HFX_LOG_INFO("[BullX] Smart money tracking enabled");
     
     // Simulate adding known smart money wallets
     pimpl_->smart_money_wallets_ = {

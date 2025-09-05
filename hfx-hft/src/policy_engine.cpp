@@ -154,7 +154,7 @@ public:
         policies_[policy_id] = std::move(policy);
         policy_enabled_[policy_id] = true;
         
-        std::cout << "[PolicyEngine] Added policy: " << policy_id << std::endl;
+        HFX_LOG_INFO("[PolicyEngine] Added policy: " << policy_id << std::endl;
     }
     
     void remove_policy(uint32_t policy_id) {
@@ -162,7 +162,7 @@ public:
         policies_.erase(policy_id);
         policy_enabled_.erase(policy_id);
         
-        std::cout << "[PolicyEngine] Removed policy: " << policy_id << std::endl;
+        HFX_LOG_INFO("[PolicyEngine] Removed policy: " << policy_id << std::endl;
     }
     
     void enable_policy(uint32_t policy_id, bool enabled) {
@@ -311,12 +311,12 @@ void PolicyEngine::update_policy_parameters(uint32_t policy_id,
 void PolicyEngine::emergency_stop_all() {
     pimpl_->emergency_stopped_.store(true);
     pimpl_->metrics_.emergency_stops.fetch_add(1);
-    std::cout << "[PolicyEngine] 🚨 EMERGENCY STOP ACTIVATED 🚨" << std::endl;
+    HFX_LOG_INFO("[PolicyEngine] 🚨 EMERGENCY STOP ACTIVATED 🚨");
 }
 
 void PolicyEngine::reset_emergency_stop() {
     pimpl_->emergency_stopped_.store(false);
-    std::cout << "[PolicyEngine] Emergency stop reset" << std::endl;
+    HFX_LOG_INFO("[PolicyEngine] Emergency stop reset");
 }
 
 bool PolicyEngine::is_emergency_stopped() const {

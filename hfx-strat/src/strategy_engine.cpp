@@ -69,11 +69,11 @@ bool StrategyEngine::initialize() {
     
     // Initialize AI systems
     if (!initialize_apple_ml()) {
-        std::cout << "[StrategyEngine] Warning: Apple ML acceleration not available\n";
+        HFX_LOG_INFO("[StrategyEngine] Warning: Apple ML acceleration not available\n";
     }
     
     if (!initialize_quantlib_integration()) {
-        std::cout << "[StrategyEngine] Warning: Python quantlib integration not available\n";
+        HFX_LOG_INFO("[StrategyEngine] Warning: Python quantlib integration not available\n";
     }
     
     // Enable default strategies
@@ -82,7 +82,7 @@ bool StrategyEngine::initialize() {
     strategy_enabled_[StrategyType::LIQUIDITY_EPOCH_BREATHING] = true;
     
     running_.store(true, std::memory_order_release);
-    std::cout << "[StrategyEngine] Initialized successfully\n";
+    HFX_LOG_INFO("[StrategyEngine] Initialized successfully\n";
     return true;
 }
 
@@ -92,7 +92,7 @@ void StrategyEngine::shutdown() {
     }
     
     running_.store(false, std::memory_order_release);
-    std::cout << "[StrategyEngine] Shutdown complete\n";
+    HFX_LOG_INFO("[StrategyEngine] Shutdown complete\n";
 }
 
 void StrategyEngine::process_market_data(const MarketData& market_data) {
@@ -109,7 +109,7 @@ void StrategyEngine::process_market_data(const MarketData& market_data) {
     // Check for anomalies
     if (detect_market_anomaly(market_data)) {
         anomalies_detected_.fetch_add(1, std::memory_order_relaxed);
-        std::cout << "[StrategyEngine] Market anomaly detected for " << market_data.symbol << "\n";
+        HFX_LOG_INFO("[StrategyEngine] Market anomaly detected for " << market_data.symbol << "\n";
     }
     
     // Run quantum optimization
@@ -132,7 +132,7 @@ void StrategyEngine::process_market_data(const MarketData& market_data) {
         if (signal_callback_) {
             if (signal_callback_(signal)) {
                 total_signals_generated_.fetch_add(1, std::memory_order_relaxed);
-                std::cout << "[StrategyEngine] Generated signal for " << signal.asset_pair 
+                HFX_LOG_INFO("[StrategyEngine] Generated signal for " << signal.asset_pair 
                           << " with confidence " << signal.confidence << "\n";
             }
         }
@@ -146,13 +146,13 @@ void StrategyEngine::process_market_data(const MarketData& market_data) {
 
 void StrategyEngine::set_strategy_enabled(StrategyType strategy, bool enabled) {
     strategy_enabled_[strategy] = enabled;
-    std::cout << "[StrategyEngine] Strategy " << static_cast<int>(strategy) 
+    HFX_LOG_INFO("[StrategyEngine] Strategy " << static_cast<int>(strategy) 
               << " " << (enabled ? "enabled" : "disabled") << "\n";
 }
 
 void StrategyEngine::update_strategy_parameters(StrategyType strategy, 
                                                const std::unordered_map<std::string, double>& parameters) {
-    std::cout << "[StrategyEngine] Updated parameters for strategy " << static_cast<int>(strategy) << "\n";
+    HFX_LOG_INFO("[StrategyEngine] Updated parameters for strategy " << static_cast<int>(strategy) << "\n";
     // Parameter updates would be implemented here
 }
 
@@ -188,16 +188,16 @@ bool StrategyEngine::initialize_apple_ml() {
 #ifdef __APPLE__
     // Metal initialization would go here (requires Objective-C++)
     // For HFT, we avoid Objective-C overhead and use optimized C++ implementations
-    std::cout << "[StrategyEngine] Using optimized C++ implementations for HFT\n";
+    HFX_LOG_INFO("[StrategyEngine] Using optimized C++ implementations for HFT\n";
     return true;
 #endif
-    std::cout << "[StrategyEngine] Apple platform optimizations not available\n";
+    HFX_LOG_INFO("[StrategyEngine] Apple platform optimizations not available\n";
     return false;
 }
 
 bool StrategyEngine::initialize_quantlib_integration() {
     // Python integration would be implemented here
-    std::cout << "[StrategyEngine] Python quantlib integration initialized\n";
+    HFX_LOG_INFO("[StrategyEngine] Python quantlib integration initialized\n";
     return true;
 }
 

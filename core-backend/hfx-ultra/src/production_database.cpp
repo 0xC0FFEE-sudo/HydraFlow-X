@@ -25,7 +25,7 @@ namespace hfx::ultra {
 
 ProductionDatabase::ProductionDatabase(const SchemaConfig& config) 
     : config_(config), db_connection_(nullptr), in_transaction_(false) {
-    std::cout << "🗄️  Initializing Production Database with " 
+    HFX_LOG_INFO("🗄️  Initializing Production Database with " 
               << (config_.backend == DatabaseBackend::POSTGRESQL ? "PostgreSQL" : 
                   config_.backend == DatabaseBackend::CLICKHOUSE ? "ClickHouse" : "Unknown") 
               << " backend" << std::endl;
@@ -40,18 +40,18 @@ bool ProductionDatabase::connect() {
         return true;
     }
     
-    std::cout << "🔌 Connecting to " 
+    HFX_LOG_INFO("🔌 Connecting to " 
               << (config_.backend == DatabaseBackend::POSTGRESQL ? "PostgreSQL" : 
                   config_.backend == DatabaseBackend::CLICKHOUSE ? "ClickHouse" : "database") 
               << " database..." << std::endl;
     
     if (!connect_to_database()) {
-        std::cerr << "❌ Failed to connect to database" << std::endl;
+        HFX_LOG_ERROR("❌ Failed to connect to database");
         return false;
     }
     
     connected_.store(true);
-    std::cout << "✅ Database connection established" << std::endl;
+    HFX_LOG_INFO("✅ Database connection established");
     return true;
 }
 
@@ -60,7 +60,7 @@ bool ProductionDatabase::disconnect() {
         return true;
     }
     
-    std::cout << "🔌 Disconnecting from database..." << std::endl;
+    HFX_LOG_INFO("🔌 Disconnecting from database...");
     
     // Close any open transactions
     if (in_transaction_.load()) {
@@ -70,17 +70,17 @@ bool ProductionDatabase::disconnect() {
     disconnect_from_database();
     connected_.store(false);
     
-    std::cout << "✅ Database disconnected" << std::endl;
+    HFX_LOG_INFO("✅ Database disconnected");
     return true;
 }
 
 bool ProductionDatabase::create_schema() {
     if (!connected_.load()) {
-        std::cerr << "❌ Cannot create schema: not connected to database" << std::endl;
+        HFX_LOG_ERROR("❌ Cannot create schema: not connected to database");
         return false;
     }
     
-    std::cout << "📝 Creating database schema: " << config_.schema_name << std::endl;
+    HFX_LOG_INFO("📝 Creating database schema: " << config_.schema_name << std::endl;
     
     std::string create_schema_sql;
     
@@ -96,15 +96,15 @@ bool ProductionDatabase::create_schema() {
                               " WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 3};";
             break;
         default:
-            std::cerr << "❌ Unsupported database backend for schema creation" << std::endl;
+            HFX_LOG_ERROR("❌ Unsupported database backend for schema creation");
             return false;
     }
     
     auto result = execute_query(create_schema_sql);
     if (result.success) {
-        std::cout << "✅ Schema created successfully" << std::endl;
+        HFX_LOG_INFO("✅ Schema created successfully");
     } else {
-        std::cerr << "❌ Failed to create schema: " << result.error_message << std::endl;
+        HFX_LOG_ERROR("❌ Failed to create schema: " << result.error_message << std::endl;
     }
     
     return result.success;
@@ -112,11 +112,11 @@ bool ProductionDatabase::create_schema() {
 
 bool ProductionDatabase::drop_schema() {
     if (!connected_.load()) {
-        std::cerr << "❌ Cannot drop schema: not connected to database" << std::endl;
+        HFX_LOG_ERROR("❌ Cannot drop schema: not connected to database");
         return false;
     }
     
-    std::cout << "🗑️  Dropping database schema: " << config_.schema_name << std::endl;
+    HFX_LOG_INFO("🗑️  Dropping database schema: " << config_.schema_name << std::endl;
     
     std::string drop_schema_sql;
     
@@ -131,15 +131,15 @@ bool ProductionDatabase::drop_schema() {
             drop_schema_sql = "DROP KEYSPACE IF EXISTS " + config_.schema_name + ";";
             break;
         default:
-            std::cerr << "❌ Unsupported database backend for schema deletion" << std::endl;
+            HFX_LOG_ERROR("❌ Unsupported database backend for schema deletion");
             return false;
     }
     
     auto result = execute_query(drop_schema_sql);
     if (result.success) {
-        std::cout << "✅ Schema dropped successfully" << std::endl;
+        HFX_LOG_INFO("✅ Schema dropped successfully");
     } else {
-        std::cerr << "❌ Failed to drop schema: " << result.error_message << std::endl;
+        HFX_LOG_ERROR("❌ Failed to drop schema: " << result.error_message << std::endl;
     }
     
     return result.success;
@@ -148,24 +148,24 @@ bool ProductionDatabase::drop_schema() {
 // Transaction management implementation
 bool ProductionDatabase::begin_transaction() {
     if (!connected_.load()) {
-        std::cerr << "❌ Cannot begin transaction: not connected to database" << std::endl;
+        HFX_LOG_ERROR("❌ Cannot begin transaction: not connected to database");
         return false;
     }
     
     if (in_transaction_.load()) {
-        std::cerr << "⚠️  Already in transaction: " << current_transaction_id_ << std::endl;
+        HFX_LOG_ERROR("⚠️  Already in transaction: " << current_transaction_id_ << std::endl;
         return true; // Already in transaction
     }
     
     current_transaction_id_ = generate_transaction_id();
-    std::cout << "🔄 Beginning transaction: " << current_transaction_id_ << std::endl;
+    HFX_LOG_INFO("🔄 Beginning transaction: " << current_transaction_id_ << std::endl;
     
     auto result = execute_query("BEGIN;");
     if (result.success) {
         in_transaction_.store(true);
-        std::cout << "✅ Transaction started successfully" << std::endl;
+        HFX_LOG_INFO("✅ Transaction started successfully");
     } else {
-        std::cerr << "❌ Failed to begin transaction: " << result.error_message << std::endl;
+        HFX_LOG_ERROR("❌ Failed to begin transaction: " << result.error_message << std::endl;
         current_transaction_id_.clear();
     }
     
@@ -174,23 +174,23 @@ bool ProductionDatabase::begin_transaction() {
 
 bool ProductionDatabase::commit_transaction() {
     if (!connected_.load()) {
-        std::cerr << "❌ Cannot commit transaction: not connected to database" << std::endl;
+        HFX_LOG_ERROR("❌ Cannot commit transaction: not connected to database");
         return false;
     }
     
     if (!in_transaction_.load()) {
-        std::cerr << "⚠️  No active transaction to commit" << std::endl;
+        HFX_LOG_ERROR("⚠️  No active transaction to commit");
         return false;
     }
     
-    std::cout << "💾 Committing transaction: " << current_transaction_id_ << std::endl;
+    HFX_LOG_INFO("💾 Committing transaction: " << current_transaction_id_ << std::endl;
     
     auto result = execute_query("COMMIT;");
     if (result.success) {
         in_transaction_.store(false);
-        std::cout << "✅ Transaction committed successfully" << std::endl;
+        HFX_LOG_INFO("✅ Transaction committed successfully");
     } else {
-        std::cerr << "❌ Failed to commit transaction: " << result.error_message << std::endl;
+        HFX_LOG_ERROR("❌ Failed to commit transaction: " << result.error_message << std::endl;
     }
     
     current_transaction_id_.clear();
@@ -199,23 +199,23 @@ bool ProductionDatabase::commit_transaction() {
 
 bool ProductionDatabase::rollback_transaction() {
     if (!connected_.load()) {
-        std::cerr << "❌ Cannot rollback transaction: not connected to database" << std::endl;
+        HFX_LOG_ERROR("❌ Cannot rollback transaction: not connected to database");
         return false;
     }
     
     if (!in_transaction_.load()) {
-        std::cerr << "⚠️  No active transaction to rollback" << std::endl;
+        HFX_LOG_ERROR("⚠️  No active transaction to rollback");
         return false;
     }
     
-    std::cout << "🔄 Rolling back transaction: " << current_transaction_id_ << std::endl;
+    HFX_LOG_INFO("🔄 Rolling back transaction: " << current_transaction_id_ << std::endl;
     
     auto result = execute_query("ROLLBACK;");
     if (result.success) {
         in_transaction_.store(false);
-        std::cout << "✅ Transaction rolled back successfully" << std::endl;
+        HFX_LOG_INFO("✅ Transaction rolled back successfully");
     } else {
-        std::cerr << "❌ Failed to rollback transaction: " << result.error_message << std::endl;
+        HFX_LOG_ERROR("❌ Failed to rollback transaction: " << result.error_message << std::endl;
     }
     
     current_transaction_id_.clear();
@@ -224,7 +224,7 @@ bool ProductionDatabase::rollback_transaction() {
 
 // Database health and monitoring
 void ProductionDatabase::reset_metrics() {
-    std::cout << "📊 Resetting database metrics" << std::endl;
+    HFX_LOG_INFO("📊 Resetting database metrics");
     
     metrics_.total_queries.store(0);
     metrics_.successful_queries.store(0);
@@ -237,7 +237,7 @@ void ProductionDatabase::reset_metrics() {
     metrics_.cache_hits.store(0);
     metrics_.cache_misses.store(0);
     
-    std::cout << "✅ Database metrics reset" << std::endl;
+    HFX_LOG_INFO("✅ Database metrics reset");
 }
 
 ProductionDatabase::DatabaseHealth ProductionDatabase::get_health_status() const {
@@ -261,10 +261,10 @@ ProductionDatabase::DatabaseHealth ProductionDatabase::get_health_status() const
 bool ProductionDatabase::configure_connection_pool(const ConnectionPoolConfig& pool_config) {
     std::lock_guard<std::mutex> lock(pool_mutex_);
     
-    std::cout << "🏊 Configuring connection pool..." << std::endl;
-    std::cout << "   Min connections: " << pool_config.min_connections << std::endl;
-    std::cout << "   Max connections: " << pool_config.max_connections << std::endl;
-    std::cout << "   Connection timeout: " << pool_config.connection_timeout_ms << "ms" << std::endl;
+    HFX_LOG_INFO("🏊 Configuring connection pool...");
+    HFX_LOG_INFO("   Min connections: " << pool_config.min_connections << std::endl;
+    HFX_LOG_INFO("   Max connections: " << pool_config.max_connections << std::endl;
+    HFX_LOG_INFO("   Connection timeout: " << pool_config.connection_timeout_ms << "ms" << std::endl;
     
     pool_config_ = pool_config;
     
@@ -276,7 +276,7 @@ bool ProductionDatabase::configure_connection_pool(const ConnectionPoolConfig& p
         }
     }
     
-    std::cout << "✅ Connection pool configured with " << available_connections_.size() << " connections" << std::endl;
+    HFX_LOG_INFO("✅ Connection pool configured with " << available_connections_.size() << " connections" << std::endl;
     return true;
 }
 
@@ -292,26 +292,26 @@ uint32_t ProductionDatabase::get_available_connections() const {
 
 bool ProductionDatabase::create_table(const TableDefinition& table_def) {
     if (!connected_.load()) {
-        std::cerr << "❌ Cannot create table: not connected to database" << std::endl;
+        HFX_LOG_ERROR("❌ Cannot create table: not connected to database");
         return false;
     }
     
-    std::cout << "📝 Creating table: " << table_def.name << std::endl;
+    HFX_LOG_INFO("📝 Creating table: " << table_def.name << std::endl;
     
     std::string create_table_sql = build_create_table_sql(table_def);
     auto result = execute_query(create_table_sql);
     
     if (!result.success) {
-        std::cerr << "❌ Failed to create table " << table_def.name << ": " << result.error_message << std::endl;
+        HFX_LOG_ERROR("❌ Failed to create table " << table_def.name << ": " << result.error_message << std::endl;
         return false;
     }
     
-    std::cout << "✅ Table " << table_def.name << " created successfully" << std::endl;
+    HFX_LOG_INFO("✅ Table " << table_def.name << " created successfully" << std::endl;
     
     // Create indexes
     for (const auto& index_def : table_def.indexes) {
         if (!create_index(table_def.name, index_def)) {
-            std::cerr << "⚠️  Warning: Failed to create index " << index_def.name << std::endl;
+            HFX_LOG_ERROR("⚠️  Warning: Failed to create index " << index_def.name << std::endl;
         }
     }
     
@@ -329,19 +329,19 @@ bool ProductionDatabase::create_table(const TableDefinition& table_def) {
 
 bool ProductionDatabase::drop_table(const std::string& table_name) {
     if (!connected_.load()) {
-        std::cerr << "❌ Cannot drop table: not connected to database" << std::endl;
+        HFX_LOG_ERROR("❌ Cannot drop table: not connected to database");
         return false;
     }
     
-    std::cout << "🗑️  Dropping table: " << table_name << std::endl;
+    HFX_LOG_INFO("🗑️  Dropping table: " << table_name << std::endl;
     
     std::string drop_sql = "DROP TABLE IF EXISTS " + table_name + ";";
     auto result = execute_query(drop_sql);
     
     if (result.success) {
-        std::cout << "✅ Table " << table_name << " dropped successfully" << std::endl;
+        HFX_LOG_INFO("✅ Table " << table_name << " dropped successfully" << std::endl;
     } else {
-        std::cerr << "❌ Failed to drop table " << table_name << ": " << result.error_message << std::endl;
+        HFX_LOG_ERROR("❌ Failed to drop table " << table_name << ": " << result.error_message << std::endl;
     }
     
     return result.success;
@@ -352,15 +352,15 @@ bool ProductionDatabase::create_index(const std::string& table_name, const Table
         return false;
     }
     
-    std::cout << "🔍 Creating index: " << index_def.name << " on table " << table_name << std::endl;
+    HFX_LOG_INFO("🔍 Creating index: " << index_def.name << " on table " << table_name << std::endl;
     
     std::string create_index_sql = build_create_index_sql(table_name, index_def);
     auto result = execute_query(create_index_sql);
     
     if (result.success) {
-        std::cout << "✅ Index " << index_def.name << " created successfully" << std::endl;
+        HFX_LOG_INFO("✅ Index " << index_def.name << " created successfully" << std::endl;
     } else {
-        std::cerr << "❌ Failed to create index " << index_def.name << ": " << result.error_message << std::endl;
+        HFX_LOG_ERROR("❌ Failed to create index " << index_def.name << ": " << result.error_message << std::endl;
     }
     
     return result.success;
@@ -667,7 +667,7 @@ void ProductionDatabase::update_query_metrics(std::chrono::milliseconds executio
 bool ProductionDatabase::batch_insert(const std::string& table_name, const std::vector<std::vector<std::string>>& rows) {
     if (rows.empty()) return true;
     
-    std::cout << "📊 Batch inserting " << rows.size() << " rows into " << table_name << std::endl;
+    HFX_LOG_INFO("📊 Batch inserting " << rows.size() << " rows into " << table_name << std::endl;
     
     // Mock implementation
     metrics_.bytes_written.fetch_add(rows.size() * 100); // Estimate 100 bytes per row
@@ -676,25 +676,25 @@ bool ProductionDatabase::batch_insert(const std::string& table_name, const std::
 
 bool ProductionDatabase::batch_update(const std::string& table_name, const std::vector<std::vector<std::string>>& rows,
                      const std::vector<std::string>& key_columns) {
-    std::cout << "📊 Batch updating " << rows.size() << " rows in " << table_name << std::endl;
+    HFX_LOG_INFO("📊 Batch updating " << rows.size() << " rows in " << table_name << std::endl;
     return true;
 }
 
 bool ProductionDatabase::batch_upsert(const std::string& table_name, const std::vector<std::vector<std::string>>& rows,
                      const std::vector<std::string>& conflict_columns) {
-    std::cout << "📊 Batch upserting " << rows.size() << " rows in " << table_name << std::endl;
+    HFX_LOG_INFO("📊 Batch upserting " << rows.size() << " rows in " << table_name << std::endl;
     return true;
 }
 
 bool ProductionDatabase::create_time_partition(const std::string& table_name, 
                               std::chrono::system_clock::time_point start_time,
                               std::chrono::system_clock::time_point end_time) {
-    std::cout << "🗂️  Creating time partition for " << table_name << std::endl;
+    HFX_LOG_INFO("🗂️  Creating time partition for " << table_name << std::endl;
     return true;
 }
 
 bool ProductionDatabase::drop_old_partitions(const std::string& table_name, std::chrono::hours older_than) {
-    std::cout << "🗑️  Dropping old partitions for " << table_name << std::endl;
+    HFX_LOG_INFO("🗑️  Dropping old partitions for " << table_name << std::endl;
     return true;
 }
 
@@ -703,32 +703,32 @@ std::vector<std::string> ProductionDatabase::list_partitions(const std::string& 
 }
 
 bool ProductionDatabase::perform_maintenance() {
-    std::cout << "🧹 Performing database maintenance" << std::endl;
+    HFX_LOG_INFO("🧹 Performing database maintenance");
     return true;
 }
 
 bool ProductionDatabase::vacuum_analyze(const std::string& table_name) {
-    std::cout << "🧹 Running VACUUM ANALYZE on " << (table_name.empty() ? "all tables" : table_name) << std::endl;
+    HFX_LOG_INFO("🧹 Running VACUUM ANALYZE on " << (table_name.empty() ? "all tables" : table_name) << std::endl;
     return true;
 }
 
 bool ProductionDatabase::reindex_table(const std::string& table_name) {
-    std::cout << "🔍 Reindexing table " << table_name << std::endl;
+    HFX_LOG_INFO("🔍 Reindexing table " << table_name << std::endl;
     return true;
 }
 
 bool ProductionDatabase::create_backup(const std::string& backup_path, bool compress) {
-    std::cout << "💾 Creating backup to " << backup_path << (compress ? " (compressed)" : "") << std::endl;
+    HFX_LOG_INFO("💾 Creating backup to " << backup_path << (compress ? " (compressed)" : "") << std::endl;
     return true;
 }
 
 bool ProductionDatabase::restore_backup(const std::string& backup_path) {
-    std::cout << "📥 Restoring backup from " << backup_path << std::endl;
+    HFX_LOG_INFO("📥 Restoring backup from " << backup_path << std::endl;
     return true;
 }
 
 bool ProductionDatabase::create_point_in_time_recovery_point(const std::string& label) {
-    std::cout << "📍 Creating recovery point: " << label << std::endl;
+    HFX_LOG_INFO("📍 Creating recovery point: " << label << std::endl;
     return true;
 }
 

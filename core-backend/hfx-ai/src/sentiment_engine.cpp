@@ -303,23 +303,23 @@ SentimentEngine::~SentimentEngine() {
 }
 
 bool SentimentEngine::initialize() {
-    std::cout << "[SentimentEngine] Initializing ultra-low latency sentiment analysis..." << std::endl;
+    HFX_LOG_INFO("[SentimentEngine] Initializing ultra-low latency sentiment analysis...");
     
 #ifdef HFX_PYTHON_EMBED
     // Initialize Python for FinGPT model integration
     Py_Initialize();
     if (!Py_IsInitialized()) {
-        std::cout << "[SentimentEngine] Failed to initialize Python interpreter" << std::endl;
+        HFX_LOG_INFO("[SentimentEngine] Failed to initialize Python interpreter");
         return false;
     }
 #endif
     
     pimpl_->start_processing();
     
-    std::cout << "[SentimentEngine] ✅ Sentiment analysis engine ready" << std::endl;
-    std::cout << "[SentimentEngine]    • Fast keyword scoring: ON" << std::endl;
-    std::cout << "[SentimentEngine]    • Real-time aggregation: ON" << std::endl;
-    std::cout << "[SentimentEngine]    • Multi-source support: ON" << std::endl;
+    HFX_LOG_INFO("[SentimentEngine] ✅ Sentiment analysis engine ready");
+    HFX_LOG_INFO("[SentimentEngine]    • Fast keyword scoring: ON");
+    HFX_LOG_INFO("[SentimentEngine]    • Real-time aggregation: ON");
+    HFX_LOG_INFO("[SentimentEngine]    • Multi-source support: ON");
     
     return true;
 }
@@ -333,12 +333,12 @@ void SentimentEngine::shutdown() {
     }
 #endif
     
-    std::cout << "[SentimentEngine] Sentiment analysis engine stopped" << std::endl;
+    HFX_LOG_INFO("[SentimentEngine] Sentiment analysis engine stopped");
 }
 
 void SentimentEngine::add_data_source(const DataSource& source) {
     pimpl_->data_sources_.push_back(source);
-    std::cout << "[SentimentEngine] Added data source: " << source.name 
+    HFX_LOG_INFO("[SentimentEngine] Added data source: " << source.name 
               << " (weight: " << source.weight << ")" << std::endl;
 }
 
@@ -396,7 +396,7 @@ public:
     }
     
     void feed_worker(const FeedConfig& config) {
-        std::cout << "[DataFeeds] Starting feed: " << config.name << std::endl;
+        HFX_LOG_INFO("[DataFeeds] Starting feed: " << config.name << std::endl;
         
         auto& stats = feed_stats_[config.name];
         stats.is_connected.store(true);
@@ -417,7 +417,7 @@ public:
         }
         
         stats.is_connected.store(false);
-        std::cout << "[DataFeeds] Stopped feed: " << config.name << std::endl;
+        HFX_LOG_INFO("[DataFeeds] Stopped feed: " << config.name << std::endl;
     }
     
 private:
@@ -521,7 +521,7 @@ DataFeedsManager::~DataFeedsManager() {
 }
 
 bool DataFeedsManager::initialize() {
-    std::cout << "[DataFeeds] Initializing multi-source data feeds..." << std::endl;
+    HFX_LOG_INFO("[DataFeeds] Initializing multi-source data feeds...");
     pimpl_->running_.store(true);
     return true;
 }
@@ -538,7 +538,7 @@ void DataFeedsManager::shutdown() {
 
 void DataFeedsManager::add_feed(const FeedConfig& config) {
     pimpl_->feeds_.push_back(config);
-    std::cout << "[DataFeeds] Added feed: " << config.name 
+    HFX_LOG_INFO("[DataFeeds] Added feed: " << config.name 
               << " (" << config.type << ")" << std::endl;
 }
 

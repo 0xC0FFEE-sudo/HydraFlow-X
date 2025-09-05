@@ -10,6 +10,7 @@ add_library(hfx-mm STATIC
 
 target_include_directories(hfx-mm PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/hfx-core/include
 )
 
 target_link_libraries(hfx-mm PUBLIC

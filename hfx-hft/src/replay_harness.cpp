@@ -99,14 +99,14 @@ public:
     ReplayEngineImpl(const ReplayConfig& config) : config_(config) {}
     
     bool initialize() {
-        std::cout << "[ReplayEngine] Initializing replay system..." << std::endl;
+        HFX_LOG_INFO("[ReplayEngine] Initializing replay system...");
         initialized_.store(true);
         return true;
     }
     
     void shutdown() {
         initialized_.store(false);
-        std::cout << "[ReplayEngine] Shutdown complete" << std::endl;
+        HFX_LOG_INFO("[ReplayEngine] Shutdown complete");
     }
 };
 
@@ -128,50 +128,50 @@ bool ReplayEngine::is_initialized() const {
 }
 
 bool ReplayEngine::load_market_data(const std::vector<std::string>& file_paths) {
-    std::cout << "[ReplayEngine] Loading market data from " << file_paths.size() << " files" << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Loading market data from " << file_paths.size() << " files" << std::endl;
     return true;
 }
 
 bool ReplayEngine::load_signal_data(const std::vector<std::string>& file_paths) {
-    std::cout << "[ReplayEngine] Loading signal data from " << file_paths.size() << " files" << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Loading signal data from " << file_paths.size() << " files" << std::endl;
     return true;
 }
 
 bool ReplayEngine::load_trade_data(const std::vector<std::string>& file_paths) {
-    std::cout << "[ReplayEngine] Loading trade data from " << file_paths.size() << " files" << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Loading trade data from " << file_paths.size() << " files" << std::endl;
     return true;
 }
 
 void ReplayEngine::start_replay() {
-    std::cout << "[ReplayEngine] Replay started" << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Replay started");
 }
 
 void ReplayEngine::pause_replay() {
-    std::cout << "[ReplayEngine] Replay paused" << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Replay paused");
 }
 
 void ReplayEngine::resume_replay() {
-    std::cout << "[ReplayEngine] Replay resumed" << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Replay resumed");
 }
 
 void ReplayEngine::stop_replay() {
-    std::cout << "[ReplayEngine] Replay stopped" << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Replay stopped");
 }
 
 void ReplayEngine::step_forward(size_t events) {
-    std::cout << "[ReplayEngine] Stepping forward " << events << " events" << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Stepping forward " << events << " events" << std::endl;
 }
 
 void ReplayEngine::seek_to_timestamp(uint64_t timestamp_ns) {
-    std::cout << "[ReplayEngine] Seeking to timestamp " << timestamp_ns << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Seeking to timestamp " << timestamp_ns << std::endl;
 }
 
 void ReplayEngine::seek_to_percentage(double percentage) {
-    std::cout << "[ReplayEngine] Seeking to " << percentage << "%" << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Seeking to " << percentage << "%" << std::endl;
 }
 
 void ReplayEngine::reset_to_beginning() {
-    std::cout << "[ReplayEngine] Reset to beginning" << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Reset to beginning");
 }
 
 bool ReplayEngine::get_next_event(EventStream::Event& event) {
@@ -243,12 +243,12 @@ ReplayEngine::ReplayMetrics ReplayEngine::get_replay_metrics() const {
 }
 
 bool ReplayEngine::generate_audit_trail(const std::string& output_path) {
-    std::cout << "[ReplayEngine] Generating audit trail to " << output_path << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Generating audit trail to " << output_path << std::endl;
     return true;
 }
 
 bool ReplayEngine::export_compliance_report(const std::string& output_path) {
-    std::cout << "[ReplayEngine] Exporting compliance report to " << output_path << std::endl;
+    HFX_LOG_INFO("[ReplayEngine] Exporting compliance report to " << output_path << std::endl;
     return true;
 }
 

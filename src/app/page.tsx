@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
-import { DashboardRouter } from '@/components/dashboard/DashboardContent';
+import { MainDashboard } from '@/components/dashboard/MainDashboard';
 import { WebSocketProvider } from '@/providers/WebSocketProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -62,18 +62,8 @@ function DashboardContent() {
         />
 
         {/* Dashboard content */}
-        <main className="flex-1 overflow-auto bg-gradient-to-br from-secondary-950 via-secondary-900 to-secondary-950">
-          <div className="h-full p-6">
-            <motion.div
-              key={activeView}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="h-full"
-            >
-              <DashboardRouter activeView={activeView} />
-            </motion.div>
-          </div>
+        <main className="flex-1 overflow-auto">
+          <MainDashboard />
         </main>
       </div>
 

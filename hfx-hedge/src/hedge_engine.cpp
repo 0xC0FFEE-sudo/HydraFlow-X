@@ -14,7 +14,7 @@ bool HedgeEngine::initialize() {
     }
     
     running_.store(true, std::memory_order_release);
-    std::cout << "[HedgeEngine] Initialized cross-venue hedging\n";
+    HFX_LOG_INFO("[HedgeEngine] Initialized cross-venue hedging\n";
     return true;
 }
 
@@ -24,7 +24,7 @@ void HedgeEngine::shutdown() {
     }
     
     running_.store(false, std::memory_order_release);
-    std::cout << "[HedgeEngine] Shutdown complete\n";
+    HFX_LOG_INFO("[HedgeEngine] Shutdown complete\n";
 }
 
 bool HedgeEngine::execute_hedge(const strat::TradingSignal& signal) {
@@ -32,7 +32,7 @@ bool HedgeEngine::execute_hedge(const strat::TradingSignal& signal) {
         return false;
     }
     
-    std::cout << "[HedgeEngine] Executing hedge for " << signal.asset_pair 
+    HFX_LOG_INFO("[HedgeEngine] Executing hedge for " << signal.asset_pair 
               << " size " << signal.size << "\n";
     
     // Simplified hedge execution

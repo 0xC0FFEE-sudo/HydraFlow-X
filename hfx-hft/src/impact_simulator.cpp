@@ -12,7 +12,7 @@ namespace hfx::hft {
 // In a real system, this would implement sophisticated market microstructure models
 
 void simulate_market_impact() {
-    std::cout << "[ImpactSimulator] Market impact simulation placeholder" << std::endl;
+    HFX_LOG_INFO("[ImpactSimulator] Market impact simulation placeholder");
 }
 
 } // namespace hfx::hft

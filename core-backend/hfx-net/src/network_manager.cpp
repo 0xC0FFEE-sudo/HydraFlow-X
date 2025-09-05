@@ -49,7 +49,7 @@ bool NetworkManager::initialize() {
     }
     
     running_.store(true, std::memory_order_release);
-    std::cout << "[NetworkManager] Initialized successfully\n";
+    HFX_LOG_INFO("[NetworkManager] Initialized successfully\n";
     return true;
 }
 
@@ -60,12 +60,12 @@ void NetworkManager::shutdown() {
     
     running_.store(false, std::memory_order_release);
     connections_.clear();
-    std::cout << "[NetworkManager] Shutdown complete\n";
+    HFX_LOG_INFO("[NetworkManager] Shutdown complete\n";
 }
 
 ConnectionId NetworkManager::create_connection(const ConnectionConfig& config) {
     const auto connection_id = next_connection_id_.fetch_add(1, std::memory_order_relaxed);
-    std::cout << "[NetworkManager] Created connection " << connection_id 
+    HFX_LOG_INFO("[NetworkManager] Created connection " << connection_id 
               << " to " << config.endpoint << "\n";
     return connection_id;
 }
@@ -74,7 +74,7 @@ bool NetworkManager::close_connection(ConnectionId connection_id) {
     auto it = connections_.find(connection_id);
     if (it != connections_.end()) {
         connections_.erase(it);
-        std::cout << "[NetworkManager] Closed connection " << connection_id << "\n";
+        HFX_LOG_INFO("[NetworkManager] Closed connection " << connection_id << "\n";
         return true;
     }
     return false;
@@ -123,7 +123,7 @@ std::uint64_t NetworkManager::get_hardware_timestamp() {
 
 bool NetworkManager::initialize_platform() {
 #ifdef __APPLE__
-    std::cout << "[NetworkManager] Initializing macOS kqueue support\n";
+    HFX_LOG_INFO("[NetworkManager] Initializing macOS kqueue support\n";
     // kqueue initialization would go here
     return true;
 #else

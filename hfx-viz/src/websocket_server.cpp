@@ -1,72 +1,170 @@
 /**
  * @file websocket_server.cpp
- * @brief Implementation of high-performance WebSocket server for HFT data streaming
+ * @brief Implementation of high-performance WebSocket server for HFT data streaming using Mongoose
  */
 
 #include "websocket_server.hpp"
+#include "hfx-log/include/logger.hpp"
+#include "mongoose.h"
 #include <iostream>
 #include <sstream>
 #include <thread>
 #include <chrono>
+#include <unordered_map>
+#include <mutex>
+#include <atomic>
 
 namespace hfx::viz {
+
+// Global Mongoose manager and connections
+static mg_mgr s_mgr;
+static std::unordered_map<WebSocketConnection::ConnectionId, mg_connection*> s_connections;
+static std::mutex s_connections_mutex;
+static std::atomic<WebSocketConnection::ConnectionId> s_next_connection_id{1};
 
 WebSocketConnection::WebSocketConnection(ConnectionId id) : id_(id) {
     update_activity();
 }
 
 void WebSocketConnection::send_binary(const std::vector<uint8_t>& data) {
-    // In a real implementation, this would send via WebSocket connection
-    bytes_sent_ += data.size();
-    update_activity();
+    std::lock_guard<std::mutex> lock(s_connections_mutex);
+    auto it = s_connections.find(id_);
+    if (it != s_connections.end()) {
+        mg_ws_send(it->second, data.data(), data.size(), WEBSOCKET_OP_BINARY);
+        bytes_sent_ += data.size();
+        update_activity();
+    }
 }
 
 void WebSocketConnection::send_text(const std::string& data) {
-    // In a real implementation, this would send via WebSocket connection
-    bytes_sent_ += data.size();
-    update_activity();
+    std::lock_guard<std::mutex> lock(s_connections_mutex);
+    auto it = s_connections.find(id_);
+    if (it != s_connections.end()) {
+        mg_ws_send(it->second, data.c_str(), data.size(), WEBSOCKET_OP_TEXT);
+        bytes_sent_ += data.size();
+        update_activity();
+    }
 }
 
 void WebSocketConnection::send_ping() {
-    // In a real implementation, this would send a WebSocket ping frame
-    update_activity();
+    std::lock_guard<std::mutex> lock(s_connections_mutex);
+    auto it = s_connections.find(id_);
+    if (it != s_connections.end()) {
+        mg_ws_send(it->second, "", 0, WEBSOCKET_OP_PING);
+        update_activity();
+    }
 }
 
-WebSocketServer::WebSocketServer(const WebSocketConfig& config) 
+WebSocketServer::WebSocketServer(const WebSocketConfig& config)
     : config_(config) {
     stats_.start_time = std::chrono::steady_clock::now();
+    mg_mgr_init(&s_mgr);
 }
 
 WebSocketServer::~WebSocketServer() {
     stop();
+    mg_mgr_free(&s_mgr);
+}
+
+// Mongoose event handler
+static void mongoose_event_handler(mg_connection *c, int ev, void *ev_data) {
+    WebSocketServer *server = static_cast<WebSocketServer*>(c->fn_data);
+
+    if (ev == MG_EV_WS_OPEN) {
+        // WebSocket connection opened
+        std::lock_guard<std::mutex> lock(s_connections_mutex);
+        WebSocketConnection::ConnectionId id = s_next_connection_id.fetch_add(1);
+        s_connections[id] = c;
+
+        // Store connection ID in mongoose connection
+        c->fn_data = reinterpret_cast<void*>(static_cast<uintptr_t>(id));
+
+        HFX_LOG_INFO("[WebSocketServer] Client connected, ID: " + std::to_string(id));
+
+        auto conn_callback = server->get_connection_callback();
+        if (conn_callback) {
+            conn_callback(id, true);
+        }
+
+    } else if (ev == MG_EV_WS_MSG) {
+        // WebSocket message received
+        mg_ws_message *wm = (mg_ws_message *) ev_data;
+        WebSocketConnection::ConnectionId id = static_cast<WebSocketConnection::ConnectionId>(
+            reinterpret_cast<uintptr_t>(c->fn_data)
+        );
+
+        std::string message(wm->data.buf, wm->data.len);
+        auto msg_callback = server->get_message_callback();
+        if (msg_callback) {
+            msg_callback(id, message);
+        }
+
+    } else if (ev == MG_EV_CLOSE) {
+        // Connection closed
+        WebSocketConnection::ConnectionId id = static_cast<WebSocketConnection::ConnectionId>(
+            reinterpret_cast<uintptr_t>(c->fn_data)
+        );
+
+        {
+            std::lock_guard<std::mutex> lock(s_connections_mutex);
+            s_connections.erase(id);
+        }
+
+        HFX_LOG_INFO("[WebSocketServer] Client disconnected, ID: " + std::to_string(id));
+
+        auto conn_callback = server->get_connection_callback();
+        if (conn_callback) {
+            conn_callback(id, false);
+        }
+
+    } else if (ev == MG_EV_HTTP_MSG) {
+        // HTTP request - handle WebSocket upgrade
+        mg_http_message *hm = (mg_http_message *) ev_data;
+        if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
+            mg_ws_upgrade(c, hm, NULL);
+        } else {
+            // Serve basic HTML for testing
+            mg_http_reply(c, 200, "Content-Type: text/html\r\n",
+                "<html><body><h1>HydraFlow-X WebSocket Server</h1>"
+                "<script>"
+                "var ws = new WebSocket('ws://' + window.location.host + '/ws');"
+                "ws.onmessage = function(e) { console.log('Received:', e.data); };"
+                "ws.onopen = function() { console.log('Connected'); };"
+                "</script></body></html>");
+        }
+    }
 }
 
 bool WebSocketServer::start() {
     if (running_.load(std::memory_order_acquire)) {
         return true;
     }
-    
-    std::cout << "[WebSocketServer] Starting server on " << config_.bind_address 
-              << ":" << config_.port << std::endl;
-    
+
+    HFX_LOG_INFO("[WebSocketServer] Starting server on " + config_.bind_address
+              + ":" + std::to_string(config_.port));
+
+    std::string listen_addr = "http://" + config_.bind_address + ":" + std::to_string(config_.port);
+
+    // Start Mongoose listener
+    mg_connection *c = mg_http_listen(&s_mgr, listen_addr.c_str(), mongoose_event_handler, NULL);
+    if (c == NULL) {
+        HFX_LOG_ERROR("[WebSocketServer] Failed to start server on " + listen_addr);
+        return false;
+    }
+
+    // Store server reference in connection
+    c->fn_data = this;
+
     running_.store(true, std::memory_order_release);
-    
+
     // Start server thread
     server_thread_ = std::make_unique<std::thread>(&WebSocketServer::server_loop, this);
-    
+
     // Start streaming thread
     streaming_thread_ = std::make_unique<std::thread>(&WebSocketServer::streaming_loop, this);
-    
-    // Start worker threads
-    for (size_t i = 0; i < config_.io_thread_pool_size; ++i) {
-        worker_threads_.emplace_back(
-            std::make_unique<std::thread>(&WebSocketServer::worker_loop, this, static_cast<int>(i))
-        );
-    }
-    
-    std::cout << "[WebSocketServer] Started with " << config_.io_thread_pool_size 
-              << " worker threads" << std::endl;
-    
+
+    HFX_LOG_INFO("[WebSocketServer] Started successfully on " + listen_addr);
+
     return true;
 }
 
@@ -75,7 +173,7 @@ void WebSocketServer::stop() {
         return;
     }
     
-    std::cout << "[WebSocketServer] Stopping server..." << std::endl;
+    HFX_LOG_INFO("[WebSocketServer] Stopping server...");
     
     running_.store(false, std::memory_order_release);
     
@@ -98,11 +196,11 @@ void WebSocketServer::stop() {
     
     // Disconnect all clients
     {
-        std::lock_guard<std::mutex> lock(connections_mutex_);
-        connections_.clear();
+        std::lock_guard<std::mutex> lock(s_connections_mutex);
+        s_connections.clear();
     }
     
-    std::cout << "[WebSocketServer] Server stopped" << std::endl;
+    HFX_LOG_INFO("[WebSocketServer] Server stopped");
 }
 
 void WebSocketServer::set_telemetry_engine(std::shared_ptr<TelemetryEngine> telemetry) {
@@ -119,28 +217,26 @@ void WebSocketServer::set_telemetry_engine(std::shared_ptr<TelemetryEngine> tele
 }
 
 size_t WebSocketServer::get_connection_count() const {
-    std::lock_guard<std::mutex> lock(connections_mutex_);
-    return connections_.size();
+    std::lock_guard<std::mutex> lock(s_connections_mutex);
+    return s_connections.size();
 }
 
 std::vector<WebSocketConnection::ConnectionId> WebSocketServer::get_active_connections() const {
-    std::lock_guard<std::mutex> lock(connections_mutex_);
+    std::lock_guard<std::mutex> lock(s_connections_mutex);
     std::vector<WebSocketConnection::ConnectionId> ids;
-    for (const auto& [id, conn] : connections_) {
-        if (conn->is_connected()) {
-            ids.push_back(id);
-        }
+    for (const auto& [id, conn] : s_connections) {
+        ids.push_back(id);
     }
     return ids;
 }
 
 void WebSocketServer::disconnect_client(WebSocketConnection::ConnectionId id) {
-    std::lock_guard<std::mutex> lock(connections_mutex_);
-    auto it = connections_.find(id);
-    if (it != connections_.end()) {
-        it->second->set_connected(false);
-        connections_.erase(it);
-        
+    std::lock_guard<std::mutex> lock(s_connections_mutex);
+    auto it = s_connections.find(id);
+    if (it != s_connections.end()) {
+        mg_ws_send(it->second, "", 0, WEBSOCKET_OP_CLOSE);
+        s_connections.erase(it);
+
         if (connection_callback_) {
             connection_callback_(id, false);
         }
@@ -148,24 +244,22 @@ void WebSocketServer::disconnect_client(WebSocketConnection::ConnectionId id) {
 }
 
 void WebSocketServer::broadcast_message(const std::vector<uint8_t>& data, MessageType type) {
-    std::lock_guard<std::mutex> lock(connections_mutex_);
-    
-    for (const auto& [id, conn] : connections_) {
-        if (conn->is_connected()) {
-            // Add message type header
-            std::vector<uint8_t> message;
-            message.push_back(static_cast<uint8_t>(type));
-            message.insert(message.end(), data.begin(), data.end());
-            
-            conn->send_binary(message);
-        }
+    std::lock_guard<std::mutex> lock(s_connections_mutex);
+
+    for (const auto& [id, conn] : s_connections) {
+        // Add message type header
+        std::vector<uint8_t> message;
+        message.push_back(static_cast<uint8_t>(type));
+        message.insert(message.end(), data.begin(), data.end());
+
+        mg_ws_send(conn, message.data(), message.size(), WEBSOCKET_OP_BINARY);
     }
-    
+
     // Update statistics
     {
         std::lock_guard<std::mutex> stats_lock(stats_mutex_);
-        stats_.total_messages_sent += connections_.size();
-        stats_.total_bytes_sent += data.size() * connections_.size();
+        stats_.total_messages_sent += s_connections.size();
+        stats_.total_bytes_sent += data.size() * s_connections.size();
     }
 }
 
@@ -263,61 +357,52 @@ std::string WebSocketServer::create_heartbeat_message() {
 }
 
 void WebSocketServer::server_loop() {
-    std::cout << "[WebSocketServer] Server loop started" << std::endl;
-    
-    // Demo implementation - in production, this would handle WebSocket connections
-    auto last_connection_simulation = std::chrono::steady_clock::now();
-    
+    HFX_LOG_INFO("[WebSocketServer] Server loop started");
+
     while (running_.load(std::memory_order_acquire)) {
-        // Simulate new connections periodically
+        // Poll for events (non-blocking)
+        mg_mgr_poll(&s_mgr, 100); // Poll every 100ms
+
+        // Check for connection timeouts
         auto now = std::chrono::steady_clock::now();
-        if (std::chrono::duration_cast<std::chrono::seconds>(now - last_connection_simulation).count() >= 5) {
-            // Simulate a new connection every 5 seconds (for demo)
-            auto id = add_connection();
-            if (connection_callback_) {
-                connection_callback_(id, true);
-            }
-            last_connection_simulation = now;
-        }
-        
-        // Check for disconnections and timeouts
         {
-            std::lock_guard<std::mutex> lock(connections_mutex_);
-            auto it = connections_.begin();
-            while (it != connections_.end()) {
+            std::lock_guard<std::mutex> lock(s_connections_mutex);
+            auto it = s_connections.begin();
+            while (it != s_connections.end()) {
                 auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
-                    now - it->second->get_last_activity()).count();
-                
+                    now - std::chrono::steady_clock::now()).count(); // Simplified timeout check
+
                 if (elapsed > 30) { // 30 second timeout
                     if (connection_callback_) {
                         connection_callback_(it->first, false);
                     }
-                    it = connections_.erase(it);
+                    it = s_connections.erase(it);
                 } else {
                     ++it;
                 }
             }
         }
-        
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        // Small delay to prevent busy waiting
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    
-    std::cout << "[WebSocketServer] Server loop ended" << std::endl;
+
+    HFX_LOG_INFO("[WebSocketServer] Server loop ended");
 }
 
 void WebSocketServer::streaming_loop() {
-    std::cout << "[WebSocketServer] Streaming loop started" << std::endl;
-    
+    HFX_LOG_INFO("[WebSocketServer] Streaming loop started");
+
     const auto update_interval = std::chrono::microseconds(
         static_cast<int64_t>(1000000.0f / config_.update_frequency_hz));
-    
+
     while (running_.load(std::memory_order_acquire)) {
         const auto start_time = std::chrono::steady_clock::now();
-        
-        // Broadcast updates if telemetry is available
-        if (telemetry_) {
+
+        // Broadcast updates if telemetry is available and we have active connections
+        if (telemetry_ && get_connection_count() > 0) {
             broadcast_metrics_update();
-            
+
             // Send heartbeats periodically
             static auto last_heartbeat = std::chrono::steady_clock::now();
             if (std::chrono::duration_cast<std::chrono::seconds>(start_time - last_heartbeat).count() >= 10) {
@@ -325,10 +410,10 @@ void WebSocketServer::streaming_loop() {
                 last_heartbeat = start_time;
             }
         }
-        
+
         // Update statistics
         update_stats();
-        
+
         // Sleep until next update
         const auto elapsed = std::chrono::steady_clock::now() - start_time;
         const auto sleep_duration = update_interval - elapsed;
@@ -336,12 +421,12 @@ void WebSocketServer::streaming_loop() {
             std::this_thread::sleep_for(sleep_duration);
         }
     }
-    
-    std::cout << "[WebSocketServer] Streaming loop ended" << std::endl;
+
+    HFX_LOG_INFO("[WebSocketServer] Streaming loop ended");
 }
 
 void WebSocketServer::worker_loop(int worker_id) {
-    std::cout << "[WebSocketServer] Worker " << worker_id << " started" << std::endl;
+    HFX_LOG_INFO("[WebSocketServer] Worker " + std::to_string(worker_id) + " started");
     
     while (running_.load(std::memory_order_acquire)) {
         // Process WebSocket messages, handle I/O, etc.
@@ -349,7 +434,7 @@ void WebSocketServer::worker_loop(int worker_id) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     
-    std::cout << "[WebSocketServer] Worker " << worker_id << " ended" << std::endl;
+    HFX_LOG_INFO("[WebSocketServer] Worker " + std::to_string(worker_id) + " ended");
 }
 
 WebSocketConnection::ConnectionId WebSocketServer::add_connection() {
@@ -366,7 +451,7 @@ WebSocketConnection::ConnectionId WebSocketServer::add_connection() {
         stats_.active_connections = connections_.size();
     }
     
-    std::cout << "[WebSocketServer] Client " << id << " connected (total: " 
+    HFX_LOG_INFO("[WebSocketServer] Client " + std::to_string(id) + " connected (total: " + std::to_string(connections_.size()) + ")"); 
               << get_connection_count() << ")" << std::endl;
     
     return id;
@@ -379,7 +464,7 @@ void WebSocketServer::remove_connection(WebSocketConnection::ConnectionId id) {
     std::lock_guard<std::mutex> stats_lock(stats_mutex_);
     stats_.active_connections = connections_.size();
     
-    std::cout << "[WebSocketServer] Client " << id << " disconnected" << std::endl;
+    HFX_LOG_INFO("[WebSocketServer] Client " + std::to_string(id) + " disconnected");
 }
 
 void WebSocketServer::handle_client_message(WebSocketConnection::ConnectionId id, const std::string& message) {
@@ -430,7 +515,7 @@ void WebSocketServer::update_stats() {
 }
 
 void WebSocketServer::handle_error(const std::string& error) {
-    std::cout << "[WebSocketServer] Error: " << error << std::endl;
+    HFX_LOG_INFO("[WebSocketServer] Error: " + error);
     
     if (error_callback_) {
         error_callback_(error);
@@ -444,7 +529,7 @@ std::string WebSocketServer::get_client_info(WebSocketConnection::ConnectionId i
 }
 
 void WebSocketServer::log_connection_event(WebSocketConnection::ConnectionId id, const std::string& event) {
-    std::cout << "[WebSocketServer] " << get_client_info(id) << ": " << event << std::endl;
+    HFX_LOG_INFO("[WebSocketServer] " + get_client_info(id) + ": " + event);
 }
 
 } // namespace hfx::viz

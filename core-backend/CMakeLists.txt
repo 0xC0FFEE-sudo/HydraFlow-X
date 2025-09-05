@@ -1,7 +1,17 @@
 # HydraFlow-X Core Backend
 # Ultra-Low Latency DeFi HFT Engine Implementation
 
-# Note: CMake project and standards are set by parent CMakeLists.txt
+# CMake minimum version and project setup
+cmake_minimum_required(VERSION 3.20)
+project(HydraFlow-X VERSION 1.0.0 LANGUAGES CXX C)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+message(STATUS "🚀 HydraFlow-X Build Configuration")
+message(STATUS "==================================")
 
 # Architecture detection and optimization
 if(NOT DEFINED HFX_TARGET_ARCH)
@@ -165,6 +175,13 @@ target_link_libraries(hydraflow-x PRIVATE
     hfx-log
     hfx-ultra
     hfx-api
+    hfx-risk
+    hfx-auth
+    # hfx-monitor  # Temporarily disabled due to compilation issues
+    hfx-security
+    hfx-mempool
+    # hfx-chain  # Temporarily disabled to test if ChainManager is causing build spam
+    hfx-viz
     Threads::Threads
     ${Python3_LIBRARIES}
 )

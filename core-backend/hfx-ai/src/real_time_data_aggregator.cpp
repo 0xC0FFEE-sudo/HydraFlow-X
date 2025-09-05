@@ -113,7 +113,7 @@ struct RealTimeDataAggregator::Impl {
             processing_threads.emplace_back(&Impl::processing_thread_loop, this, i);
         }
         
-        std::cout << "RealTimeDataAggregator: Started " << num_cores << " processing threads" << std::endl;
+        HFX_LOG_INFO("RealTimeDataAggregator: Started " << num_cores << " processing threads" << std::endl;
     }
     
     void start_all_processing() {
@@ -125,7 +125,7 @@ struct RealTimeDataAggregator::Impl {
             signal_fusion_thread = std::thread(&Impl::signal_fusion_loop, this);
             quality_control_thread = std::thread(&Impl::quality_control_loop, this);
             
-            std::cout << "RealTimeDataAggregator: All processing started (Ultra-Fast Mode)" << std::endl;
+            HFX_LOG_INFO("RealTimeDataAggregator: All processing started (Ultra-Fast Mode)");
         }
     }
     
@@ -150,12 +150,12 @@ struct RealTimeDataAggregator::Impl {
                 }
             }
             
-            std::cout << "RealTimeDataAggregator: All processing stopped" << std::endl;
+            HFX_LOG_INFO("RealTimeDataAggregator: All processing stopped");
         }
     }
     
     void processing_thread_loop(int thread_id) {
-        std::cout << "Processing thread " << thread_id << " started" << std::endl;
+        HFX_LOG_INFO("Processing thread " << thread_id << " started" << std::endl;
         
         // Set thread priority for low-latency processing
         set_thread_priority();
@@ -178,11 +178,11 @@ struct RealTimeDataAggregator::Impl {
                 }
                 
             } catch (const std::exception& e) {
-                std::cerr << "Processing thread " << thread_id << " error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Processing thread " << thread_id << " error: " << e.what() << std::endl;
             }
         }
         
-        std::cout << "Processing thread " << thread_id << " stopped" << std::endl;
+        HFX_LOG_INFO("Processing thread " << thread_id << " stopped" << std::endl;
     }
     
     void process_market_data_batch() {
@@ -392,7 +392,7 @@ struct RealTimeDataAggregator::Impl {
     }
     
     void health_monitoring_loop() {
-        std::cout << "Health monitoring started" << std::endl;
+        HFX_LOG_INFO("Health monitoring started");
         
         while (is_running.load()) {
             try {
@@ -401,17 +401,17 @@ struct RealTimeDataAggregator::Impl {
                 update_source_reliability();
                 
             } catch (const std::exception& e) {
-                std::cerr << "Health monitoring error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Health monitoring error: " << e.what() << std::endl;
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
         
-        std::cout << "Health monitoring stopped" << std::endl;
+        HFX_LOG_INFO("Health monitoring stopped");
     }
     
     void signal_fusion_loop() {
-        std::cout << "Signal fusion engine started" << std::endl;
+        HFX_LOG_INFO("Signal fusion engine started");
         
         while (is_running.load()) {
             try {
@@ -419,17 +419,17 @@ struct RealTimeDataAggregator::Impl {
                 clean_expired_signals();
                 
             } catch (const std::exception& e) {
-                std::cerr << "Signal fusion error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Signal fusion error: " << e.what() << std::endl;
             }
             
             std::this_thread::sleep_for(std::chrono::milliseconds(100)); // 100ms fusion cycles
         }
         
-        std::cout << "Signal fusion engine stopped" << std::endl;
+        HFX_LOG_INFO("Signal fusion engine stopped");
     }
     
     void quality_control_loop() {
-        std::cout << "Quality control started" << std::endl;
+        HFX_LOG_INFO("Quality control started");
         
         while (is_running.load()) {
             try {
@@ -438,13 +438,13 @@ struct RealTimeDataAggregator::Impl {
                 update_quality_metrics();
                 
             } catch (const std::exception& e) {
-                std::cerr << "Quality control error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Quality control error: " << e.what() << std::endl;
             }
             
             std::this_thread::sleep_for(std::chrono::milliseconds(500)); // 500ms QC cycles
         }
         
-        std::cout << "Quality control stopped" << std::endl;
+        HFX_LOG_INFO("Quality control stopped");
     }
     
     void monitor_all_streams() {
@@ -464,7 +464,7 @@ struct RealTimeDataAggregator::Impl {
                                  std::max(1ULL, health.messages_received.load());
             
             if (processing_rate < 0.95) { // Less than 95% processing rate
-                std::cout << "Warning: Stream processing rate low for stream type " 
+                HFX_LOG_INFO("Warning: Stream processing rate low for stream type " 
                          << static_cast<int>(stream_type) << std::endl;
             }
         }
@@ -485,7 +485,7 @@ struct RealTimeDataAggregator::Impl {
     
     void restart_stream_impl(StreamType stream_type) {
         // Stream restart logic - would connect to actual APIs in production
-        std::cout << "Restarting stream type " << static_cast<int>(stream_type) << std::endl;
+        HFX_LOG_INFO("Restarting stream type " << static_cast<int>(stream_type) << std::endl;
         
         std::lock_guard<std::mutex> lock(health_mutex);
         auto& health = stream_health[stream_type];
@@ -766,7 +766,7 @@ RealTimeDataAggregator::~RealTimeDataAggregator() {
 }
 
 bool RealTimeDataAggregator::initialize() {
-    std::cout << "Initializing Real-Time Data Aggregator (Ultra-Fast Processing)" << std::endl;
+    HFX_LOG_INFO("Initializing Real-Time Data Aggregator (Ultra-Fast Processing)");
     return true;
 }
 
@@ -786,7 +786,7 @@ bool RealTimeDataAggregator::start_stream(StreamType type, const std::string& co
         std::chrono::duration_cast<std::chrono::seconds>(
             std::chrono::system_clock::now().time_since_epoch()).count());
     
-    std::cout << "Started stream type " << static_cast<int>(type) << std::endl;
+    HFX_LOG_INFO("Started stream type " << static_cast<int>(type) << std::endl;
     return true;
 }
 
@@ -795,7 +795,7 @@ void RealTimeDataAggregator::stop_stream(StreamType type) {
     auto& health = pimpl_->stream_health[type];
     health.is_connected.store(false);
     
-    std::cout << "Stopped stream type " << static_cast<int>(type) << std::endl;
+    HFX_LOG_INFO("Stopped stream type " << static_cast<int>(type) << std::endl;
 }
 
 bool RealTimeDataAggregator::is_stream_healthy(StreamType type) const {
@@ -811,7 +811,7 @@ void RealTimeDataAggregator::restart_stream(StreamType type) {
 void RealTimeDataAggregator::start_twitter_stream(const std::vector<std::string>& keywords,
                                                  const std::vector<std::string>& usernames) {
     start_stream(StreamType::SOCIAL_MEDIA, "twitter_config");
-    std::cout << "Twitter stream started with " << keywords.size() << " keywords and " 
+    HFX_LOG_INFO("Twitter stream started with " << keywords.size() << " keywords and " 
               << usernames.size() << " usernames" << std::endl;
 }
 
@@ -826,26 +826,26 @@ void RealTimeDataAggregator::start_smart_money_stream(const std::vector<std::str
         }
     }
     
-    std::cout << "Smart money stream started monitoring " << watched_wallets.size() 
+    HFX_LOG_INFO("Smart money stream started monitoring " << watched_wallets.size() 
               << " wallets (min size: $" << min_transaction_size << ")" << std::endl;
 }
 
 void RealTimeDataAggregator::start_dexscreener_stream(const std::string& chain, double min_liquidity) {
     start_stream(StreamType::MARKET_DATA, "dexscreener_config");
-    std::cout << "DexScreener stream started for " << chain 
+    HFX_LOG_INFO("DexScreener stream started for " << chain 
               << " (min liquidity: $" << min_liquidity << ")" << std::endl;
 }
 
 void RealTimeDataAggregator::start_reddit_stream(const std::vector<std::string>& subreddits,
                                                 const std::vector<std::string>& keywords) {
     start_stream(StreamType::SOCIAL_MEDIA, "reddit_config");
-    std::cout << "Reddit stream started for " << subreddits.size() << " subreddits" << std::endl;
+    HFX_LOG_INFO("Reddit stream started for " << subreddits.size() << " subreddits" << std::endl;
 }
 
 void RealTimeDataAggregator::start_news_stream(const std::vector<std::string>& sources,
                                               const std::vector<std::string>& keywords) {
     start_stream(StreamType::NEWS_FEED, "news_config");
-    std::cout << "News stream started for " << sources.size() << " sources" << std::endl;
+    HFX_LOG_INFO("News stream started for " << sources.size() << " sources" << std::endl;
 }
 
 void RealTimeDataAggregator::process_live_market_data(const LiveMarketData& data) {
@@ -900,7 +900,7 @@ void RealTimeDataAggregator::register_signal_callback(std::function<void(const A
 
 void RealTimeDataAggregator::enable_low_latency_mode(bool enabled) {
     pimpl_->low_latency_mode.store(enabled);
-    std::cout << "Low-latency mode " << (enabled ? "enabled" : "disabled") << std::endl;
+    HFX_LOG_INFO("Low-latency mode " << (enabled ? "enabled" : "disabled") << std::endl;
 }
 
 void RealTimeDataAggregator::set_processing_priority(int priority) {
@@ -953,7 +953,7 @@ void RealTimeDataAggregator::apply_fastest_bot_settings() {
     pimpl_->data_validation_level = 2; // Lower validation for speed
     pimpl_->max_messages_per_second = 50000; // Higher throughput
     
-    std::cout << "Applied fastest bot settings (Maximum Speed Mode)" << std::endl;
+    HFX_LOG_INFO("Applied fastest bot settings (Maximum Speed Mode)");
 }
 
 void RealTimeDataAggregator::emergency_stop_all_streams() {
@@ -963,7 +963,7 @@ void RealTimeDataAggregator::emergency_stop_all_streams() {
     pimpl_->smart_money_queue.clear();
     pimpl_->signal_output_queue.clear();
     
-    std::cout << "🚨 EMERGENCY STOP: All streams stopped and queues cleared" << std::endl;
+    HFX_LOG_INFO("🚨 EMERGENCY STOP: All streams stopped and queues cleared");
 }
 
 // Explicit template instantiations

@@ -11,6 +11,17 @@ class ApiService {
     this.baseUrl = API_CONFIG.REST_BASE_URL;
   }
 
+  async get<T = any>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' });
+  }
+
+  async post<T = any>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -32,13 +43,7 @@ class ApiService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'API request failed');
-      }
-
-      return data.data;
+      return await response.json();
     } catch (error) {
       console.error(`API request failed for ${endpoint}:`, error);
       throw error;
@@ -46,16 +51,84 @@ class ApiService {
   }
 
   // System APIs
-  async getSystemStatus(): Promise<SystemHealth> {
-    return this.request<SystemHealth>(API_CONFIG.ENDPOINTS.SYSTEM_METRICS);
+  async getSystemStatus(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.STATUS);
   }
 
-  async getPerformanceMetrics(): Promise<PerformanceMetrics> {
-    return this.request<PerformanceMetrics>(API_CONFIG.ENDPOINTS.PERFORMANCE);
+  async getSystemInfo(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.SYSTEM_INFO);
   }
 
-  async getSystemMetrics(): Promise<SystemMetrics> {
-    return this.request<SystemMetrics>(API_CONFIG.ENDPOINTS.SYSTEM_METRICS);
+  async getMarketPrices(): Promise<{
+    ethereum: {
+      gas_price: string;
+      block_number: string;
+      pending_txs: string;
+    };
+    solana: {
+      slot: string;
+      tps: string;
+      jito_tips: string;
+    };
+    tokens: Array<{
+      symbol: string;
+      price: string;
+      change_24h: string;
+    }>;
+  }> {
+    return this.request('/api/v1/market/prices');
+  }
+
+  async getWebSocketInfo(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.WEBSOCKET_INFO);
+  }
+
+  // Trading APIs
+  async getOrders(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.ORDERS);
+  }
+
+  async createOrder(order: {
+    symbol: string;
+    side: 'buy' | 'sell';
+    type: 'market' | 'limit';
+    quantity: number;
+    price?: number;
+  }): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.CREATE_ORDER, {
+      method: 'POST',
+      body: JSON.stringify(order),
+    });
+  }
+
+
+  async getBalances(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.BALANCES);
+  }
+
+
+
+  // MEV Protection APIs
+
+  async getMEVProtectionStats(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.MEV_PROTECTION_STATS);
+  }
+
+  async getMEVRelays(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.MEV_RELAYS);
+  }
+
+  // Risk Management APIs
+  async getRiskMetrics(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.RISK_METRICS);
+  }
+
+  async getCircuitBreakers(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.CIRCUIT_BREAKERS);
+  }
+
+  async getTradingAllowed(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.TRADING_ALLOWED);
   }
 
   // Trading APIs
@@ -97,11 +170,19 @@ class ApiService {
     symbol: string;
     side: 'buy' | 'sell';
     amount: number;
-    order_type: 'market' | 'limit';
-    slippage_percent: number;
-    gas_price_gwei: number;
-  }): Promise<{ order_id: string; status: string; estimated_execution_time_ms: number }> {
-    return this.request(API_CONFIG.ENDPOINTS.PLACE_ORDER, {
+    slippage?: number;
+  }): Promise<{
+    order_id: string;
+    status: string;
+    platform: string;
+    symbol: string;
+    side: string;
+    amount: string;
+    price: string;
+    timestamp: string;
+    estimated_gas: string;
+  }> {
+    return this.request('/api/v1/orders', {
       method: 'POST',
       body: JSON.stringify(order),
     });

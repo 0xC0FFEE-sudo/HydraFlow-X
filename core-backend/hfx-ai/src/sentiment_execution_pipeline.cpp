@@ -117,7 +117,7 @@ struct SentimentExecutionPipeline::Impl {
             sentiment_monitor_thread = std::thread(&Impl::sentiment_monitoring_loop, this);
             priority_fee_monitor_thread = std::thread(&Impl::priority_fee_monitoring_loop, this);
             
-            std::cout << "Sentiment-to-Execution Pipeline started (Microsecond Mode)" << std::endl;
+            HFX_LOG_INFO("Sentiment-to-Execution Pipeline started (Microsecond Mode)");
         }
     }
     
@@ -140,12 +140,12 @@ struct SentimentExecutionPipeline::Impl {
                 }
             }
             
-            std::cout << "Pipeline stopped" << std::endl;
+            HFX_LOG_INFO("Pipeline stopped");
         }
     }
     
     void execution_thread_loop(int thread_id) {
-        std::cout << "Execution thread " << thread_id << " started" << std::endl;
+        HFX_LOG_INFO("Execution thread " << thread_id << " started" << std::endl;
         
         while (is_running.load()) {
             try {
@@ -190,22 +190,22 @@ struct SentimentExecutionPipeline::Impl {
                 }
                 
                 if (result.success) {
-                    std::cout << "✅ Executed " << signal.token_symbol 
+                    HFX_LOG_INFO("✅ Executed " << signal.token_symbol 
                              << " in " << execution_latency.count() << "μs" << std::endl;
                 } else {
-                    std::cout << "❌ Failed " << signal.token_symbol 
+                    HFX_LOG_INFO("❌ Failed " << signal.token_symbol 
                              << ": " << result.error_message << std::endl;
                 }
                 
             } catch (const std::exception& e) {
-                std::cerr << "Execution thread error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Execution thread error: " << e.what() << std::endl;
                 if (error_callback) {
                     error_callback("execution_thread", e.what());
                 }
             }
         }
         
-        std::cout << "Execution thread " << thread_id << " stopped" << std::endl;
+        HFX_LOG_INFO("Execution thread " << thread_id << " stopped" << std::endl;
     }
     
     ExecutionResult execute_signal_fast(const SentimentSignal& signal) {
@@ -512,7 +512,7 @@ struct SentimentExecutionPipeline::Impl {
     }
     
     void sentiment_monitoring_loop() {
-        std::cout << "Sentiment monitoring started" << std::endl;
+        HFX_LOG_INFO("Sentiment monitoring started");
         
         while (is_running.load()) {
             try {
@@ -523,13 +523,13 @@ struct SentimentExecutionPipeline::Impl {
                 monitor_news_catalysts();
                 
             } catch (const std::exception& e) {
-                std::cerr << "Sentiment monitoring error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Sentiment monitoring error: " << e.what() << std::endl;
             }
             
             std::this_thread::sleep_for(std::chrono::milliseconds(100)); // 100ms cycles
         }
         
-        std::cout << "Sentiment monitoring stopped" << std::endl;
+        HFX_LOG_INFO("Sentiment monitoring stopped");
     }
     
     void monitor_twitter_sentiment() {
@@ -664,13 +664,13 @@ struct SentimentExecutionPipeline::Impl {
             callback_it->second(signal);
         }
         
-        std::cout << "🔔 Signal: " << signal.token_symbol 
+        HFX_LOG_INFO("🔔 Signal: " << signal.token_symbol 
                  << " " << signal.direction 
                  << " (Confidence: " << signal.confidence_level << ")" << std::endl;
     }
     
     void priority_fee_monitoring_loop() {
-        std::cout << "Priority fee monitoring started" << std::endl;
+        HFX_LOG_INFO("Priority fee monitoring started");
         
         while (is_running.load()) {
             try {
@@ -679,13 +679,13 @@ struct SentimentExecutionPipeline::Impl {
                 update_priority_fee_recommendations();
                 
             } catch (const std::exception& e) {
-                std::cerr << "Priority fee monitoring error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Priority fee monitoring error: " << e.what() << std::endl;
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(1)); // 1-second updates
         }
         
-        std::cout << "Priority fee monitoring stopped" << std::endl;
+        HFX_LOG_INFO("Priority fee monitoring stopped");
     }
     
     void update_network_congestion() {
@@ -776,7 +776,7 @@ SentimentExecutionPipeline::~SentimentExecutionPipeline() {
 }
 
 bool SentimentExecutionPipeline::initialize() {
-    std::cout << "Initializing Sentiment-to-Execution Pipeline (Microsecond Precision)" << std::endl;
+    HFX_LOG_INFO("Initializing Sentiment-to-Execution Pipeline (Microsecond Precision)");
     return true;
 }
 
@@ -829,7 +829,7 @@ void SentimentExecutionPipeline::pre_sign_transactions(const std::string& token_
         transactions.push_back("signed_tx_" + token_address + "_" + std::to_string(i));
     }
     
-    std::cout << "Pre-signed " << quantity << " transactions for " << token_address << std::endl;
+    HFX_LOG_INFO("Pre-signed " << quantity << " transactions for " << token_address << std::endl;
 }
 
 bool SentimentExecutionPipeline::has_pre_signed_transaction(const std::string& token_address, 
@@ -839,7 +839,7 @@ bool SentimentExecutionPipeline::has_pre_signed_transaction(const std::string& t
 
 void SentimentExecutionPipeline::monitor_real_time_sentiment() {
     // This is handled by the background monitoring threads
-    std::cout << "Real-time sentiment monitoring is active" << std::endl;
+    HFX_LOG_INFO("Real-time sentiment monitoring is active");
 }
 
 double SentimentExecutionPipeline::calculate_optimal_priority_fee(const SentimentSignal& signal) {
@@ -879,7 +879,7 @@ void SentimentExecutionPipeline::set_execution_mode(ExecutionUrgency default_urg
 
 void SentimentExecutionPipeline::enable_aggressive_mode(bool enabled) {
     pimpl_->aggressive_mode = enabled;
-    std::cout << "Aggressive mode " << (enabled ? "enabled" : "disabled") 
+    HFX_LOG_INFO("Aggressive mode " << (enabled ? "enabled" : "disabled") 
               << " (for memecoin sniping)" << std::endl;
 }
 
@@ -924,17 +924,17 @@ std::string SentimentExecutionPipeline::get_pipeline_status() const {
 void SentimentExecutionPipeline::emergency_stop() {
     pimpl_->emergency_stopped.store(true);
     pimpl_->signal_queue.clear();
-    std::cout << "🚨 EMERGENCY STOP ACTIVATED" << std::endl;
+    HFX_LOG_INFO("🚨 EMERGENCY STOP ACTIVATED");
 }
 
 void SentimentExecutionPipeline::pause_signal_processing() {
     pimpl_->is_paused.store(true);
-    std::cout << "⏸️ Signal processing paused" << std::endl;
+    HFX_LOG_INFO("⏸️ Signal processing paused");
 }
 
 void SentimentExecutionPipeline::resume_signal_processing() {
     pimpl_->is_paused.store(false);
-    std::cout << "▶️ Signal processing resumed" << std::endl;
+    HFX_LOG_INFO("▶️ Signal processing resumed");
 }
 
 // Explicit template instantiation for our signal queue

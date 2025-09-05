@@ -1,4 +1,5 @@
 #include "rest_api_server.hpp"
+#include "hfx-log/include/logger.hpp"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -108,7 +109,7 @@ bool RestApiServer::start() {
     }
     
     if (!http_server_->start()) {
-        std::cerr << "Failed to start HTTP server on " << config_.host << ":" << config_.port << std::endl;
+        HFX_LOG_ERROR("Failed to start HTTP server on " + config_.host + ":" + std::to_string(config_.port));
         return false;
     }
     
@@ -139,7 +140,7 @@ bool RestApiServer::start() {
         websocket_manager_->start();
     }
     
-    std::cout << "🌐 REST API Server started on http://" << config_.host << ":" << config_.port << std::endl;
+    HFX_LOG_INFO("🌐 REST API Server started on http://" + config_.host + ":" + std::to_string(config_.port));
     return true;
 }
 
@@ -166,7 +167,7 @@ void RestApiServer::stop() {
     }
     worker_threads_.clear();
     
-    std::cout << "🛑 REST API Server stopped" << std::endl;
+    HFX_LOG_INFO("🛑 REST API Server stopped");
 }
 
 bool RestApiServer::is_running() const {
@@ -504,10 +505,10 @@ bool RestApiServer::apply_middlewares(HttpRequest& request, HttpResponse& respon
 }
 
 void RestApiServer::log_request(const HttpRequest& request, const HttpResponse& response) {
-    std::cout << "[" << std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count() 
-        << "] " << request.method << " " << request.path 
-        << " -> " << response.status_code << std::endl;
+    auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    HFX_LOG_INFO("[" + std::to_string(timestamp) + "] " + request.method + " " + request.path 
+        + " -> " + std::to_string(response.status_code));
 }
 
 // TradingController Implementation
@@ -768,6 +769,38 @@ HttpResponse ConfigController::update_config(const HttpRequest& request) {
     }
 }
 
+HttpResponse ConfigController::test_connection(const HttpRequest& request) {
+    std::lock_guard<std::mutex> lock(config_mutex_);
+
+    try {
+        // Parse request body
+        auto json_data = nlohmann::json::parse(request.body);
+
+        // Check if testing API or RPC connection
+        if (json_data.contains("provider")) {
+            std::string provider = json_data["provider"];
+            bool success = test_api_connection(provider, json_data);
+            return create_json_response({
+                {"success", success},
+                {"type", "api"},
+                {"provider", provider}
+            }, success ? 200 : 500);
+        } else if (json_data.contains("chain")) {
+            std::string chain = json_data["chain"];
+            bool success = test_rpc_connection(chain, json_data);
+            return create_json_response({
+                {"success", success},
+                {"type", "rpc"},
+                {"chain", chain}
+            }, success ? 200 : 500);
+        } else {
+            return create_json_response({{"error", "Missing provider or chain parameter"}}, 400);
+        }
+    } catch (const std::exception& e) {
+        return create_json_response({{"error", e.what()}}, 400);
+    }
+}
+
 void ConfigController::load_config_from_file() {
     // Mock configuration
     current_config_ = {
@@ -845,7 +878,31 @@ bool ConfigController::validate_config(const nlohmann::json& config) const {
 void ConfigController::save_config_to_file() const {
     // Stub implementation - in production this would save to a secure config file
     // For now we just log that the configuration was saved
-    std::cout << "💾 Configuration saved to memory (file persistence disabled in demo mode)" << std::endl;
+    HFX_LOG_INFO("💾 Configuration saved to memory (file persistence disabled in demo mode)");
+}
+
+bool ConfigController::test_api_connection(const std::string& provider, const nlohmann::json& config) const {
+    // Stub implementation - in real implementation, this would test actual API connectivity
+    HFX_LOG_INFO("[ConfigController] Testing API connection for provider: " + provider);
+
+    // Simulate connection test
+    if (provider == "twitter" || provider == "dexscreener" || provider == "dextools") {
+        return true; // Simulate successful connection
+    }
+
+    return false; // Simulate failed connection
+}
+
+bool ConfigController::test_rpc_connection(const std::string& chain, const nlohmann::json& config) const {
+    // Stub implementation - in real implementation, this would test actual RPC connectivity
+    HFX_LOG_INFO("[ConfigController] Testing RPC connection for chain: " + chain);
+
+    // Simulate RPC test
+    if (chain == "ethereum" || chain == "solana" || chain == "arbitrum" || chain == "optimism") {
+        return true; // Simulate successful connection
+    }
+
+    return false; // Simulate failed connection
 }
 
 // MonitoringController Implementation
@@ -999,7 +1056,7 @@ bool WebSocketManager::start() {
         }
     });
     
-    std::cout << "🔗 WebSocket Server started on port " << config_.port << std::endl;
+    HFX_LOG_INFO("🔗 WebSocket Server started on port " + std::to_string(config_.port));
     return true;
 }
 
@@ -1014,7 +1071,7 @@ void WebSocketManager::stop() {
         server_thread_.join();
     }
     
-    std::cout << "🔗 WebSocket Server stopped" << std::endl;
+    HFX_LOG_INFO("🔗 WebSocket Server stopped");
 }
 
 bool WebSocketManager::is_running() const {
@@ -1023,7 +1080,7 @@ bool WebSocketManager::is_running() const {
 
 void WebSocketManager::broadcast_to_all(const std::string& message) {
     // Mock implementation - in real implementation this would send to all connected clients
-    // std::cout << "Broadcasting: " << message << std::endl;
+    // HFX_LOG_INFO("Broadcasting: " << message << std::endl;
 }
 
 void WebSocketManager::broadcast_system_metrics(const nlohmann::json& metrics) {

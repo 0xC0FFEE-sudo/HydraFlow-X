@@ -225,11 +225,11 @@ bool PermissionManager::can_access_resource(const std::string& user_id, const st
 // SecurityManager implementation
 SecurityManager::SecurityManager(const SecurityConfig& config) 
     : config_(config) {
-    std::cout << "🔒 Initializing Security Manager..." << std::endl;
-    std::cout << "   Session timeout: " << config_.session_timeout.count() << " minutes" << std::endl;
-    std::cout << "   Rate limiting: " << (config_.enable_rate_limiting ? "Enabled" : "Disabled") << std::endl;
-    std::cout << "   Audit logging: " << (config_.enable_audit_logging ? "Enabled" : "Disabled") << std::endl;
-    std::cout << "   IP filtering: " << (config_.enable_ip_whitelist ? "Enabled" : "Disabled") << std::endl;
+    HFX_LOG_INFO("🔒 Initializing Security Manager...");
+    HFX_LOG_INFO("   Session timeout: " << config_.session_timeout.count() << " minutes" << std::endl;
+    HFX_LOG_INFO("   Rate limiting: " << (config_.enable_rate_limiting ? "Enabled" : "Disabled") << std::endl;
+    HFX_LOG_INFO("   Audit logging: " << (config_.enable_audit_logging ? "Enabled" : "Disabled") << std::endl;
+    HFX_LOG_INFO("   IP filtering: " << (config_.enable_ip_whitelist ? "Enabled" : "Disabled") << std::endl;
 }
 
 SecurityManager::~SecurityManager() {
@@ -237,7 +237,7 @@ SecurityManager::~SecurityManager() {
 }
 
 bool SecurityManager::initialize() {
-    std::cout << "🔧 Initializing security system components..." << std::endl;
+    HFX_LOG_INFO("🔧 Initializing security system components...");
     
     // Set up default roles and permissions
     permission_manager_.create_role("trader", {
@@ -255,20 +255,20 @@ bool SecurityManager::initialize() {
     
     // Initialize OpenSSL
     if (!RAND_status()) {
-        std::cerr << "⚠️  OpenSSL random number generator not properly seeded" << std::endl;
+        HFX_LOG_ERROR("⚠️  OpenSSL random number generator not properly seeded");
     }
     
-    std::cout << "✅ Security system initialized" << std::endl;
+    HFX_LOG_INFO("✅ Security system initialized");
     return true;
 }
 
 bool SecurityManager::start() {
     if (running_.load()) {
-        std::cout << "⚠️  Security system already running" << std::endl;
+        HFX_LOG_INFO("⚠️  Security system already running");
         return true;
     }
     
-    std::cout << "🚀 Starting security system..." << std::endl;
+    HFX_LOG_INFO("🚀 Starting security system...");
     
     running_.store(true);
     shutdown_requested_.store(false);
@@ -279,7 +279,7 @@ bool SecurityManager::start() {
     rate_limit_refill_worker_ = std::thread(&SecurityManager::rate_limit_refill_worker, this);
     security_monitor_ = std::thread(&SecurityManager::security_monitor_worker, this);
     
-    std::cout << "✅ Security system started" << std::endl;
+    HFX_LOG_INFO("✅ Security system started");
     return true;
 }
 
@@ -288,7 +288,7 @@ bool SecurityManager::stop() {
         return true;
     }
     
-    std::cout << "🛑 Stopping security system..." << std::endl;
+    HFX_LOG_INFO("🛑 Stopping security system...");
     
     shutdown_requested_.store(true);
     running_.store(false);
@@ -307,7 +307,7 @@ bool SecurityManager::stop() {
         security_monitor_.join();
     }
     
-    std::cout << "✅ Security system stopped" << std::endl;
+    HFX_LOG_INFO("✅ Security system stopped");
     return true;
 }
 
@@ -366,7 +366,7 @@ std::string SecurityManager::create_session(const std::string& user_id, const st
     log_audit_event(AuditEventType::LOGIN_SUCCESS, user_id, "session", "create", 
                    true, "Session created with " + security_utils::auth_method_to_string(auth_method));
     
-    std::cout << "🔑 Session created: " << security_utils::format_session_info(session) << std::endl;
+    HFX_LOG_INFO("🔑 Session created: " << security_utils::format_session_info(session) << std::endl;
     
     return session_id;
 }
@@ -442,7 +442,7 @@ bool SecurityManager::terminate_session(const std::string& session_id) {
     log_audit_event(AuditEventType::LOGOUT, session.user_id, "session", "terminate", 
                    true, "Session terminated");
     
-    std::cout << "🔒 Session terminated: " << session_id.substr(0, 8) << "..." << std::endl;
+    HFX_LOG_INFO("🔒 Session terminated: " << session_id.substr(0, 8) << "..." << std::endl;
     
     return true;
 }
@@ -477,7 +477,7 @@ std::string SecurityManager::create_api_key(const std::string& user_id, const st
     log_audit_event(AuditEventType::KEY_GENERATION, user_id, "api_key", "create", 
                    true, "API key created: " + description);
     
-    std::cout << "🔑 API key created for user: " << user_id 
+    HFX_LOG_INFO("🔑 API key created for user: " << user_id 
               << " (" << description << ")" << std::endl;
     
     return api_key;
@@ -639,7 +639,7 @@ bool SecurityManager::validate_input(const std::string& input, const std::string
         std::regex regex_pattern(pattern);
         return std::regex_match(input, regex_pattern);
     } catch (const std::exception& e) {
-        std::cerr << "❌ Invalid regex pattern: " << pattern << " - " << e.what() << std::endl;
+        HFX_LOG_ERROR("❌ Invalid regex pattern: " << pattern << " - " << e.what() << std::endl;
         return false;
     }
 }
@@ -793,7 +793,7 @@ void SecurityManager::report_violation(ViolationSeverity severity, const std::st
     
     stats_.security_violations.fetch_add(1);
     
-    std::cout << "🚨 Security Violation [" 
+    HFX_LOG_INFO("🚨 Security Violation [" 
               << security_utils::severity_to_string(severity) << "] " 
               << violation_type << ": " << description << std::endl;
 }
@@ -918,7 +918,7 @@ void SecurityManager::trigger_security_lockdown(const std::string& reason) {
     log_audit_event(AuditEventType::SECURITY_VIOLATION, "SYSTEM", "security", "lockdown", 
                    true, "Security lockdown triggered: " + reason, ViolationSeverity::EMERGENCY);
     
-    std::cout << "🚨 SECURITY LOCKDOWN TRIGGERED: " << reason << std::endl;
+    HFX_LOG_INFO("🚨 SECURITY LOCKDOWN TRIGGERED: " << reason << std::endl;
 }
 
 void SecurityManager::emergency_revoke_all_sessions() {
@@ -938,12 +938,12 @@ void SecurityManager::emergency_revoke_all_sessions() {
                    true, "Revoked " + std::to_string(revoked_count) + " sessions", 
                    ViolationSeverity::EMERGENCY);
     
-    std::cout << "🚨 Emergency: Revoked " << revoked_count << " active sessions" << std::endl;
+    HFX_LOG_INFO("🚨 Emergency: Revoked " << revoked_count << " active sessions" << std::endl;
 }
 
 // Worker thread implementations
 void SecurityManager::session_cleanup_worker() {
-    std::cout << "🧹 Starting session cleanup worker" << std::endl;
+    HFX_LOG_INFO("🧹 Starting session cleanup worker");
     
     while (running_.load()) {
         std::this_thread::sleep_for(std::chrono::minutes(1));
@@ -953,11 +953,11 @@ void SecurityManager::session_cleanup_worker() {
         cleanup_expired_sessions();
     }
     
-    std::cout << "🧹 Session cleanup worker stopped" << std::endl;
+    HFX_LOG_INFO("🧹 Session cleanup worker stopped");
 }
 
 void SecurityManager::audit_log_writer_worker() {
-    std::cout << "📝 Starting audit log writer" << std::endl;
+    HFX_LOG_INFO("📝 Starting audit log writer");
     
     while (running_.load()) {
         std::queue<AuditLogEntry> entries_to_write;
@@ -981,11 +981,11 @@ void SecurityManager::audit_log_writer_worker() {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     
-    std::cout << "📝 Audit log writer stopped" << std::endl;
+    HFX_LOG_INFO("📝 Audit log writer stopped");
 }
 
 void SecurityManager::rate_limit_refill_worker() {
-    std::cout << "⏱️  Starting rate limit refill worker" << std::endl;
+    HFX_LOG_INFO("⏱️  Starting rate limit refill worker");
     
     while (running_.load()) {
         std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -1007,11 +1007,11 @@ void SecurityManager::rate_limit_refill_worker() {
         }
     }
     
-    std::cout << "⏱️  Rate limit refill worker stopped" << std::endl;
+    HFX_LOG_INFO("⏱️  Rate limit refill worker stopped");
 }
 
 void SecurityManager::security_monitor_worker() {
-    std::cout << "👁️  Starting security monitor" << std::endl;
+    HFX_LOG_INFO("👁️  Starting security monitor");
     
     while (running_.load()) {
         std::this_thread::sleep_for(std::chrono::minutes(1));
@@ -1022,7 +1022,7 @@ void SecurityManager::security_monitor_worker() {
         check_failed_login_attempts();
     }
     
-    std::cout << "👁️  Security monitor stopped" << std::endl;
+    HFX_LOG_INFO("👁️  Security monitor stopped");
 }
 
 // Helper method implementations
@@ -1055,7 +1055,7 @@ void SecurityManager::cleanup_expired_sessions() {
     }
     
     if (cleaned_count > 0) {
-        std::cout << "🧹 Cleaned up " << cleaned_count << " expired sessions" << std::endl;
+        HFX_LOG_INFO("🧹 Cleaned up " << cleaned_count << " expired sessions" << std::endl;
     }
 }
 
@@ -1119,7 +1119,7 @@ void SecurityManager::write_audit_log_to_file(const AuditLogEntry& entry) {
             log_file.close();
         }
     } catch (const std::exception& e) {
-        std::cerr << "❌ Failed to write audit log: " << e.what() << std::endl;
+        HFX_LOG_ERROR("❌ Failed to write audit log: " << e.what() << std::endl;
     }
 }
 
@@ -1185,7 +1185,7 @@ void SecurityManager::check_failed_login_attempts() {
     
     for (const auto& [user_id, count] : failed_attempts) {
         if (count >= config_.failed_login_threshold) {
-            std::cout << "⚠️  User " << user_id << " has " << count 
+            HFX_LOG_INFO("⚠️  User " << user_id << " has " << count 
                       << " failed login attempts in the last " 
                       << config_.failed_login_window.count() << " minutes" << std::endl;
         }
@@ -1266,7 +1266,7 @@ void SecurityManager::reset_stats() {
     stats_.api_keys_revoked.store(0);
     stats_.avg_session_duration_minutes.store(0.0);
     
-    std::cout << "🔒 Security statistics reset" << std::endl;
+    HFX_LOG_INFO("🔒 Security statistics reset");
 }
 
 // Factory implementations

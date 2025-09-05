@@ -21,8 +21,24 @@ target_link_libraries(hfx-chain PUBLIC
 
 target_compile_features(hfx-chain PUBLIC cxx_std_23)
 
+# Find curl for HTTP RPC calls
+find_package(CURL REQUIRED)
+if(CURL_FOUND)
+    target_include_directories(hfx-chain PRIVATE ${CURL_INCLUDE_DIRS})
+    target_link_libraries(hfx-chain PRIVATE ${CURL_LIBRARIES})
+    target_compile_definitions(hfx-chain PRIVATE HAS_CURL=1)
+endif()
+
 # JSON library for RPC communication
-find_package(PkgConfig REQUIRED)
+set(JSON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../third-party/json)
+if(NOT EXISTS ${JSON_DIR})
+    message(STATUS "nlohmann/json not found, downloading...")
+    execute_process(
+        COMMAND git clone --depth 1 https://github.com/nlohmann/json.git ${JSON_DIR}
+    )
+endif()
+
+target_include_directories(hfx-chain PRIVATE ${JSON_DIR}/include)
 
 # Unit tests
 if(BUILD_TESTING)

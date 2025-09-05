@@ -4,6 +4,7 @@
  */
 
 #include "telemetry_engine.hpp"
+#include "hfx-log/include/logger.hpp"
 #include <algorithm>
 #include <thread>
 #include <iostream>
@@ -24,7 +25,7 @@ TelemetryEngine::TelemetryEngine() {
     // Initialize all metrics to zero
     std::memset(&metrics_, 0, sizeof(metrics_));
     
-    std::cout << "[TelemetryEngine] Initialized with " << HISTORY_SIZE 
+    HFX_LOG_INFO("[TelemetryEngine] Initialized with " << HISTORY_SIZE 
               << " sample history buffer\n";
 }
 
@@ -42,7 +43,7 @@ void TelemetryEngine::start() {
     // Start worker thread for callbacks and system monitoring
     worker_thread_ = std::make_unique<std::thread>(&TelemetryEngine::worker_loop, this);
     
-    std::cout << "[TelemetryEngine] Started with update frequency: " 
+    HFX_LOG_INFO("[TelemetryEngine] Started with update frequency: " 
               << std::chrono::duration_cast<std::chrono::milliseconds>(
                      update_frequency_.load()).count() << "ms\n";
 }
@@ -58,7 +59,7 @@ void TelemetryEngine::stop() {
         worker_thread_->join();
     }
     
-    std::cout << "[TelemetryEngine] Stopped\n";
+    HFX_LOG_INFO("[TelemetryEngine] Stopped\n";
 }
 
 void TelemetryEngine::reset_metrics() {
@@ -83,7 +84,7 @@ void TelemetryEngine::reset_metrics() {
     metrics_.network.total_bytes_sent.store(0);
     metrics_.network.total_bytes_received.store(0);
     
-    std::cout << "[TelemetryEngine] All metrics reset\n";
+    HFX_LOG_INFO("[TelemetryEngine] All metrics reset\n";
 }
 
 void TelemetryEngine::record_latency(const std::string& metric_name, Duration latency) {
@@ -203,12 +204,12 @@ void TelemetryEngine::update_gas_market(double standard, double fast, double ins
 
 void TelemetryEngine::register_callback(TelemetryCallback callback) {
     callbacks_.push_back(callback);
-    std::cout << "[TelemetryEngine] Registered callback, total: " << callbacks_.size() << "\n";
+    HFX_LOG_INFO("[TelemetryEngine] Registered callback, total: " << callbacks_.size() << "\n";
 }
 
 void TelemetryEngine::set_update_frequency(Duration frequency) {
     update_frequency_.store(frequency, std::memory_order_relaxed);
-    std::cout << "[TelemetryEngine] Update frequency set to " 
+    HFX_LOG_INFO("[TelemetryEngine] Update frequency set to " 
               << std::chrono::duration_cast<std::chrono::milliseconds>(frequency).count() << "ms\n";
 }
 
@@ -256,7 +257,7 @@ std::vector<TelemetryEngine::PerformanceSnapshot> TelemetryEngine::get_history(D
 }
 
 void TelemetryEngine::worker_loop() {
-    std::cout << "[TelemetryEngine] Worker thread started\n";
+    HFX_LOG_INFO("[TelemetryEngine] Worker thread started\n";
     
     while (running_.load(std::memory_order_acquire)) {
         const auto start_time = std::chrono::high_resolution_clock::now();
@@ -308,7 +309,7 @@ void TelemetryEngine::worker_loop() {
         }
     }
     
-    std::cout << "[TelemetryEngine] Worker thread stopped\n";
+    HFX_LOG_INFO("[TelemetryEngine] Worker thread stopped\n";
 }
 
 } // namespace hfx::viz

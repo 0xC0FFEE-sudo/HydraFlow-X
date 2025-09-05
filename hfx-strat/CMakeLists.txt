@@ -12,6 +12,9 @@ add_library(hfx-strat STATIC
 
 target_include_directories(hfx-strat PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/hfx-core/include
+    ${CMAKE_SOURCE_DIR}/hfx-net/include
+    ${CMAKE_SOURCE_DIR}/hfx-mm/include
 )
 
 target_link_libraries(hfx-strat PUBLIC

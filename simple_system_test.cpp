@@ -317,7 +317,7 @@ int main() {
         tester.run_basic_tests();
         return 0;
     } catch (const std::exception& e) {
-        std::cerr << "💥 Test suite crashed: " << e.what() << std::endl;
+        HFX_LOG_ERROR("💥 Test suite crashed: " << e.what() << std::endl;
         return 1;
     }
 }

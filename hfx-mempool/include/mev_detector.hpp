@@ -11,14 +11,89 @@
 #include <chrono>
 #include <optional>
 #include <queue>
+#include <thread>
 
 namespace hfx {
 namespace mempool {
 
-// Forward declarations
-struct Transaction;
-struct ParsedIntent;
-struct GasEstimate;
+// Forward declarations and basic structures
+struct Transaction {
+    std::string hash;
+    std::string from;
+    std::string to;
+    uint64_t value;
+    uint64_t gas_limit;
+    uint64_t gas_price;
+    std::string data;
+    uint32_t block_number;
+    std::chrono::system_clock::time_point timestamp;
+
+    Transaction() : value(0), gas_limit(0), gas_price(0), block_number(0) {}
+};
+
+struct ParsedIntent {
+    std::string intent_type;
+    std::string token_in;
+    std::string token_out;
+    uint64_t amount_in;
+    uint64_t amount_out_min;
+    std::string recipient;
+    uint64_t deadline;
+
+    ParsedIntent() : amount_in(0), amount_out_min(0), deadline(0) {}
+};
+
+struct GasEstimate {
+    uint64_t safe_gas_price;
+    uint64_t proposed_gas_price;
+    uint64_t fast_gas_price;
+    uint64_t instant_gas_price;
+    uint32_t block_time_seconds;
+
+    GasEstimate() : safe_gas_price(0), proposed_gas_price(0), fast_gas_price(0), instant_gas_price(0), block_time_seconds(0) {}
+};
+
+// Private transaction submission structure
+struct PrivateTransaction {
+    std::string tx_hash;
+    std::string raw_transaction;
+    std::string target_blockchain; // "ethereum" or "solana"
+    std::string private_relay; // "flashbots", "eden", "bloxroute"
+    uint64_t max_priority_fee_per_gas;
+    uint64_t max_fee_per_gas;
+    uint64_t gas_limit;
+    std::chrono::system_clock::time_point submission_time;
+    std::string status; // "pending", "submitted", "confirmed", "failed"
+    std::optional<std::string> block_hash;
+    std::optional<uint32_t> block_number;
+
+    PrivateTransaction() : max_priority_fee_per_gas(0), max_fee_per_gas(0), gas_limit(0) {}
+};
+
+// MEV Protection Configuration
+struct MEVProtectionConfig {
+    bool enable_private_transactions = true;
+    bool enable_sandwich_protection = true;
+    bool enable_frontrun_protection = true;
+    bool enable_gas_optimization = true;
+
+    // Private relay preferences
+    std::vector<std::string> preferred_relays = {"flashbots", "eden", "bloxroute"};
+
+    // Protection thresholds
+    double min_tx_value_eth = 0.1; // Minimum transaction value to protect
+    double max_gas_price_gwei = 500.0; // Maximum gas price for protection
+    uint32_t protection_window_blocks = 5; // Blocks to monitor for attacks
+
+    // Risk thresholds
+    double max_sandwich_risk = 0.3; // Maximum acceptable sandwich risk
+    double max_frontrun_risk = 0.2; // Maximum acceptable frontrun risk
+
+    // Bundle settings for Solana
+    bool enable_jito_bundles = true;
+    uint32_t max_bundle_size = 5; // Maximum transactions per bundle
+    uint64_t bundle_tip_lamports = 1000000; // Tip for Jito bundle
+};
 
 // MEV opportunity types
 enum class MEVType {
@@ -249,7 +324,7 @@ public:
     std::optional<PriceInfo> get_price_info(const std::string& token);
     
     // Arbitrage detection
-    std::vector<MEVOpportunity> find_arbitrage_paths(const std::string& token_a, const std::string& token_b);
+    std::vector<std::string> find_arbitrage_paths(const std::string& token_a, const std::string& token_b);
     std::vector<MEVOpportunity> detect_triangular_arbitrage();
     double calculate_arbitrage_profit(const std::vector<std::string>& path, uint64_t amount);
     
@@ -279,7 +354,7 @@ public:
     void remove_monitored_chain(uint32_t chain_id);
     
     // Statistics and monitoring
-    MEVDetectorStats get_statistics() const;
+    const MEVDetectorStats& get_statistics() const;
     void reset_statistics();
     std::vector<MEVOpportunity> get_recent_opportunities(std::chrono::minutes window);
     double get_detection_success_rate() const;
@@ -322,10 +397,10 @@ private:
     // Statistics
     mutable MEVDetectorStats stats_;
     
-    // Machine learning models
-    std::unique_ptr<class MLModel> arbitrage_model_;
-    std::unique_ptr<class MLModel> sandwich_model_;
-    std::unique_ptr<class MLModel> frontrun_model_;
+    // Machine learning models (placeholder for future implementation)
+    // std::unique_ptr<class MLModel> arbitrage_model_;
+    // std::unique_ptr<class MLModel> sandwich_model_;
+    // std::unique_ptr<class MLModel> frontrun_model_;
     
     // Internal detection methods
     std::vector<MEVOpportunity> detect_arbitrage_internal(const Transaction& tx);
@@ -376,6 +451,113 @@ private:
     // Callbacks and notifications
     void notify_mev_callbacks(const MEVOpportunity& opportunity);
     void update_statistics(const std::vector<MEVOpportunity>& opportunities, double detection_time_ms);
+};
+
+// MEV Protection Manager Class
+class MEVProtectionManager {
+public:
+    explicit MEVProtectionManager(const MEVProtectionConfig& config);
+    ~MEVProtectionManager();
+
+    // Core protection functionality
+    bool submit_private_transaction(const PrivateTransaction& tx);
+    bool submit_transaction_bundle(const std::vector<PrivateTransaction>& bundle);
+    bool is_transaction_safe(const Transaction& tx);
+    double calculate_transaction_risk(const Transaction& tx);
+
+    // Protection strategies
+    bool enable_sandwich_protection(const Transaction& tx);
+    bool enable_frontrun_protection(const Transaction& tx);
+    bool optimize_gas_price(const Transaction& tx, GasEstimate& estimate);
+
+    // Private relay management
+    bool connect_to_relay(const std::string& relay_name);
+    bool disconnect_from_relay(const std::string& relay_name);
+    std::vector<std::string> get_available_relays() const;
+
+    // Monitoring and statistics
+    struct ProtectionStats {
+        std::atomic<uint64_t> transactions_protected{0};
+        std::atomic<uint64_t> attacks_prevented{0};
+        std::atomic<uint64_t> private_submissions{0};
+        std::atomic<double> avg_protection_time_ms{0.0};
+        std::atomic<double> protection_success_rate{0.0};
+        std::chrono::system_clock::time_point last_updated;
+    };
+
+    const ProtectionStats& get_protection_stats() const;
+    void reset_protection_stats();
+
+    // Configuration
+    void update_config(const MEVProtectionConfig& config);
+    MEVProtectionConfig get_config() const;
+
+    // Real-time protection
+    using ProtectionCallback = std::function<void(const Transaction&, bool /*is_protected*/)>;
+    void register_protection_callback(ProtectionCallback callback);
+
+    // Bundle management for Solana
+    bool create_jito_bundle(const std::vector<Transaction>& transactions,
+                           uint64_t tip_amount,
+                           std::string& bundle_id);
+    bool submit_jito_bundle(const std::string& bundle_id);
+
+    // Flashbots bundle support for Ethereum
+    bool submit_flashbots_bundle(const std::vector<PrivateTransaction>& bundle);
+
+    // Emergency controls
+    void emergency_stop_protection();
+    void resume_protection();
+    bool is_protection_active() const;
+
+private:
+    MEVProtectionConfig config_;
+    std::atomic<bool> protection_active_;
+    mutable std::mutex config_mutex_;
+
+    // Private relay connections
+    std::unordered_map<std::string, bool> relay_connections_;
+    mutable std::mutex relay_mutex_;
+
+    // Protection statistics
+    mutable ProtectionStats stats_;
+
+    // Callbacks
+    std::vector<ProtectionCallback> protection_callbacks_;
+    mutable std::mutex callbacks_mutex_;
+
+    // Transaction monitoring
+    std::unordered_map<std::string, Transaction> monitored_transactions_;
+    mutable std::mutex transaction_mutex_;
+
+    // Worker threads
+    std::vector<std::thread> protection_threads_;
+    std::queue<Transaction> protection_queue_;
+    mutable std::mutex queue_mutex_;
+
+    // Internal methods
+    bool submit_to_flashbots(const PrivateTransaction& tx);
+    bool submit_to_eden(const PrivateTransaction& tx);
+    bool submit_to_bloxroute(const PrivateTransaction& tx);
+    bool submit_to_jito(const PrivateTransaction& tx);
+
+    double assess_sandwich_risk(const Transaction& tx);
+    double assess_frontrun_risk(const Transaction& tx);
+    double assess_mempool_risk(const Transaction& tx);
+
+    bool apply_protection_measures(Transaction& tx);
+    void monitor_transaction_status(const std::string& tx_hash);
+
+    // Worker thread functions
+    void protection_worker();
+    void monitoring_worker();
+    void cleanup_worker();
+
+    // Utility methods
+    std::string select_best_relay(const Transaction& tx);
+    bool validate_transaction(const Transaction& tx);
+    void update_statistics(const Transaction& tx, bool is_protected);
+    void notify_protection_callbacks(const Transaction& tx, bool is_protected);
 };
 
 // Utility functions

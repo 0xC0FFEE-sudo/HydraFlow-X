@@ -20,7 +20,7 @@ CryptoSentimentAnalyzer::CryptoSentimentAnalyzer() : pimpl_(std::make_unique<Ana
 CryptoSentimentAnalyzer::~CryptoSentimentAnalyzer() = default;
 
 bool CryptoSentimentAnalyzer::initialize() {
-    std::cout << "[CryptoSentimentAnalyzer] Crypto sentiment analyzer initialized" << std::endl;
+    HFX_LOG_INFO("[CryptoSentimentAnalyzer] Crypto sentiment analyzer initialized");
     return true;
 }
 

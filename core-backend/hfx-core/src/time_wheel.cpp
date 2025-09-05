@@ -36,7 +36,7 @@ TimeWheel::~TimeWheel() = default;
 
 bool TimeWheel::initialize() {
     initialize_wheels();
-    std::cout << "[TimeWheel] Initialized with " << base_tick_duration_.count() 
+    HFX_LOG_INFO("[TimeWheel] Initialized with " << base_tick_duration_.count() 
               << "ns base tick\n";
     return true;
 }

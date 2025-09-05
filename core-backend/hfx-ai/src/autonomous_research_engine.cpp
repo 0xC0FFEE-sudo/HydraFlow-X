@@ -65,7 +65,7 @@ struct AutonomousResearchEngine::Impl {
                 deploy_validated_strategies();
                 
             } catch (const std::exception& e) {
-                std::cerr << "Research cycle error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Research cycle error: " << e.what() << std::endl;
             }
             
             auto end_time = std::chrono::high_resolution_clock::now();
@@ -323,7 +323,7 @@ struct AutonomousResearchEngine::Impl {
                 strategy.is_active = true;
                 metrics.strategies_deployed.fetch_add(1);
                 
-                std::cout << "Deployed strategy: " << strategy.name 
+                HFX_LOG_INFO("Deployed strategy: " << strategy.name 
                          << " (Sharpe: " << strategy.backtested_sharpe << ")" << std::endl;
             }
         }
@@ -340,7 +340,7 @@ AutonomousResearchEngine::~AutonomousResearchEngine() {
 }
 
 bool AutonomousResearchEngine::initialize() {
-    std::cout << "Initializing Autonomous Research Engine (Aladdin-inspired)" << std::endl;
+    HFX_LOG_INFO("Initializing Autonomous Research Engine (Aladdin-inspired)");
     return true;
 }
 
@@ -348,7 +348,7 @@ void AutonomousResearchEngine::start_research_cycle() {
     if (!pimpl_->is_running.load()) {
         pimpl_->is_running.store(true);
         pimpl_->research_thread = std::thread(&Impl::research_cycle_loop, pimpl_.get());
-        std::cout << "Research cycle started - scanning for breakthrough strategies" << std::endl;
+        HFX_LOG_INFO("Research cycle started - scanning for breakthrough strategies");
     }
 }
 
@@ -358,7 +358,7 @@ void AutonomousResearchEngine::stop_research_cycle() {
         if (pimpl_->research_thread.joinable()) {
             pimpl_->research_thread.join();
         }
-        std::cout << "Research cycle stopped" << std::endl;
+        HFX_LOG_INFO("Research cycle stopped");
     }
 }
 

@@ -70,22 +70,22 @@ public:
     }
     
     bool load_historical_data(const std::string& data_path) {
-        std::cout << "📊 Loading historical data from: " << data_path << std::endl;
+        HFX_LOG_INFO("📊 Loading historical data from: " << data_path << std::endl;
         
         // For now, generate mock data since we don't have real data files
         generate_sample_data();
         
-        std::cout << "✅ Historical data loaded successfully" << std::endl;
+        HFX_LOG_INFO("✅ Historical data loaded successfully");
         return true;
     }
     
     bool load_sentiment_data(const std::string& sentiment_path) {
-        std::cout << "💭 Loading sentiment data from: " << sentiment_path << std::endl;
+        HFX_LOG_INFO("💭 Loading sentiment data from: " << sentiment_path << std::endl;
         
         // Generate mock sentiment data
         generate_sentiment_scores();
         
-        std::cout << "✅ Sentiment data loaded successfully" << std::endl;
+        HFX_LOG_INFO("✅ Sentiment data loaded successfully");
         return true;
     }
     
@@ -102,22 +102,22 @@ public:
     }
     
     BacktestResults run_backtest() {
-        std::cout << "\n🚀 Starting comprehensive backtest..." << std::endl;
-        std::cout << "   Period: " << format_timestamp(config_.start_timestamp_ns) 
+        HFX_LOG_INFO("\n🚀 Starting comprehensive backtest...");
+        HFX_LOG_INFO("   Period: " << format_timestamp(config_.start_timestamp_ns) 
                   << " to " << format_timestamp(config_.end_timestamp_ns) << std::endl;
-        std::cout << "   Capital: $" << std::fixed << std::setprecision(2) 
+        HFX_LOG_INFO("   Capital: $" << std::fixed << std::setprecision(2) 
                   << config_.initial_capital << std::endl;
         
         BacktestResults results = execute_backtest();
         
-        std::cout << "✅ Backtest completed!" << std::endl;
+        HFX_LOG_INFO("✅ Backtest completed!");
         print_results_summary(results);
         
         return results;
     }
     
     BacktestResults run_backtest_parallel() {
-        std::cout << "\n🚀 Starting parallel backtest..." << std::endl;
+        HFX_LOG_INFO("\n🚀 Starting parallel backtest...");
         
         // For now, just run sequential - can optimize later
         return run_backtest();
@@ -125,7 +125,7 @@ public:
     
     BacktestResults test_strategy(const std::string& strategy_name,
                                 const std::unordered_map<std::string, std::string>& parameters) {
-        std::cout << "🧪 Testing strategy: " << strategy_name << std::endl;
+        HFX_LOG_INFO("🧪 Testing strategy: " << strategy_name << std::endl;
         
         // Save current config
         auto original_config = config_;
@@ -144,14 +144,14 @@ public:
     
     bool start_paper_trading(const PaperTradingConfig& config) {
         if (paper_trading_active_.load()) {
-            std::cout << "⚠️  Paper trading already active" << std::endl;
+            HFX_LOG_INFO("⚠️  Paper trading already active");
             return false;
         }
         
         paper_config_ = config;
         paper_trading_active_.store(true);
         
-        std::cout << "📈 Paper trading started with $" << config.virtual_capital << std::endl;
+        HFX_LOG_INFO("📈 Paper trading started with $" << config.virtual_capital << std::endl;
         
         // Start paper trading thread (mock implementation)
         std::thread([this]() {
@@ -174,12 +174,12 @@ public:
     
     void stop_paper_trading() {
         if (!paper_trading_active_.load()) {
-            std::cout << "⚠️  Paper trading not active" << std::endl;
+            HFX_LOG_INFO("⚠️  Paper trading not active");
             return;
         }
         
         paper_trading_active_.store(false);
-        std::cout << "🛑 Paper trading stopped" << std::endl;
+        HFX_LOG_INFO("🛑 Paper trading stopped");
     }
     
     bool is_paper_trading() const {
@@ -187,11 +187,11 @@ public:
     }
     
     void generate_report(const BacktestResults& results, const std::string& output_path) {
-        std::cout << "📄 Generating comprehensive report..." << std::endl;
+        HFX_LOG_INFO("📄 Generating comprehensive report...");
         
         std::ofstream report(output_path);
         if (!report.is_open()) {
-            std::cerr << "❌ Failed to create report file: " << output_path << std::endl;
+            HFX_LOG_ERROR("❌ Failed to create report file: " << output_path << std::endl;
             return;
         }
         
@@ -217,16 +217,16 @@ public:
         }
         
         report.close();
-        std::cout << "✅ Report generated: " << output_path << std::endl;
+        HFX_LOG_INFO("✅ Report generated: " << output_path << std::endl;
     }
     
     void generate_equity_curve_chart(const BacktestResults& results, const std::string& output_path) {
-        std::cout << "📈 Generating equity curve chart..." << std::endl;
+        HFX_LOG_INFO("📈 Generating equity curve chart...");
         
         // For now, just output CSV data that can be imported into charts
         std::ofstream csv(output_path + ".csv");
         if (!csv.is_open()) {
-            std::cerr << "❌ Failed to create CSV file" << std::endl;
+            HFX_LOG_ERROR("❌ Failed to create CSV file");
             return;
         }
         
@@ -236,15 +236,15 @@ public:
         }
         
         csv.close();
-        std::cout << "✅ Equity curve data saved: " << output_path << ".csv" << std::endl;
+        HFX_LOG_INFO("✅ Equity curve data saved: " << output_path << ".csv" << std::endl;
     }
     
     void analyze_trade_attribution(const BacktestResults& results) {
-        std::cout << "\n📊 TRADE ATTRIBUTION ANALYSIS" << std::endl;
-        std::cout << std::string(40, '=') << std::endl;
+        HFX_LOG_INFO("\n📊 TRADE ATTRIBUTION ANALYSIS");
+        HFX_LOG_INFO(std::string(40, '=') << std::endl;
         
         if (results.trades.empty()) {
-            std::cout << "No trades to analyze" << std::endl;
+            HFX_LOG_INFO("No trades to analyze");
             return;
         }
         
@@ -257,20 +257,20 @@ public:
             symbol_count[trade.symbol]++;
         }
         
-        std::cout << "PERFORMANCE BY SYMBOL:" << std::endl;
+        HFX_LOG_INFO("PERFORMANCE BY SYMBOL:");
         for (const auto& [symbol, pnl] : symbol_pnl) {
-            std::cout << "  " << symbol << ": $" << std::fixed << std::setprecision(0) 
+            HFX_LOG_INFO("  " << symbol << ": $" << std::fixed << std::setprecision(0) 
                       << pnl << " (" << symbol_count[symbol] << " trades)" << std::endl;
         }
         
         // Analyze by time of day (simplified)
-        std::cout << "\nTRADE DISTRIBUTION:" << std::endl;
-        std::cout << "  Winning trades: " << results.winning_trades << std::endl;
-        std::cout << "  Losing trades: " << results.losing_trades << std::endl;
-        std::cout << "  Average holding time: " << std::fixed << std::setprecision(1) 
+        HFX_LOG_INFO("\nTRADE DISTRIBUTION:");
+        HFX_LOG_INFO("  Winning trades: " << results.winning_trades << std::endl;
+        HFX_LOG_INFO("  Losing trades: " << results.losing_trades << std::endl;
+        HFX_LOG_INFO("  Average holding time: " << std::fixed << std::setprecision(1) 
                   << results.avg_holding_time_minutes << " minutes" << std::endl;
         
-        std::cout << std::string(40, '=') << std::endl;
+        HFX_LOG_INFO(std::string(40, '=') << std::endl;
     }
     
     void register_performance_callback(PerformanceCallback callback) {
@@ -567,10 +567,10 @@ private:
     
     void apply_strategy_parameters(const std::string& strategy_name,
                                  const std::unordered_map<std::string, std::string>& parameters) {
-        std::cout << "📋 Applying strategy parameters for: " << strategy_name << std::endl;
+        HFX_LOG_INFO("📋 Applying strategy parameters for: " << strategy_name << std::endl;
         
         for (const auto& [key, value] : parameters) {
-            std::cout << "  " << key << " = " << value << std::endl;
+            HFX_LOG_INFO("  " << key << " = " << value << std::endl;
             
             // Apply parameters to config (simplified)
             if (key == "max_position_size_pct") {
@@ -622,7 +622,7 @@ private:
     }
     
     void generate_sample_data() {
-        std::cout << "📊 Generating sample historical data..." << std::endl;
+        HFX_LOG_INFO("📊 Generating sample historical data...");
         
         // Generate 30 days of 1-minute data
         uint64_t now = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -744,19 +744,19 @@ private:
     }
     
     void print_results_summary(const BacktestResults& results) {
-        std::cout << "\n" << std::string(50, '=') << std::endl;
-        std::cout << "📊 BACKTESTING RESULTS SUMMARY" << std::endl;
-        std::cout << std::string(50, '=') << std::endl;
+        HFX_LOG_INFO("\n" << std::string(50, '=') << std::endl;
+        HFX_LOG_INFO("📊 BACKTESTING RESULTS SUMMARY");
+        HFX_LOG_INFO(std::string(50, '=') << std::endl;
         
-        std::cout << "Total Return: " << std::fixed << std::setprecision(2) 
+        HFX_LOG_INFO("Total Return: " << std::fixed << std::setprecision(2) 
                   << results.total_return_pct << "%" << std::endl;
-        std::cout << "Total Trades: " << results.total_trades << std::endl;
-        std::cout << "Win Rate: " << results.win_rate_pct << "%" << std::endl;
-        std::cout << "Avg Trade Return: " << results.avg_trade_return_pct << "%" << std::endl;
-        std::cout << "Max Drawdown: " << results.max_drawdown_pct << "%" << std::endl;
-        std::cout << "Sharpe Ratio: " << results.sharpe_ratio << std::endl;
+        HFX_LOG_INFO("Total Trades: " << results.total_trades << std::endl;
+        HFX_LOG_INFO("Win Rate: " << results.win_rate_pct << "%" << std::endl;
+        HFX_LOG_INFO("Avg Trade Return: " << results.avg_trade_return_pct << "%" << std::endl;
+        HFX_LOG_INFO("Max Drawdown: " << results.max_drawdown_pct << "%" << std::endl;
+        HFX_LOG_INFO("Sharpe Ratio: " << results.sharpe_ratio << std::endl;
         
-        std::cout << std::string(50, '=') << std::endl;
+        HFX_LOG_INFO(std::string(50, '=') << std::endl;
     }
     
     std::string format_timestamp(uint64_t timestamp_ns) {
@@ -776,7 +776,7 @@ private:
             try {
                 callback(results);
             } catch (const std::exception& e) {
-                std::cerr << "Performance callback error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Performance callback error: " << e.what() << std::endl;
             }
         }
     }

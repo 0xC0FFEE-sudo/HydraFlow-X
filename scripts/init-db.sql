@@ -1,216 +1,219 @@
--- HydraFlow-X Database Initialization Script
--- Creates the necessary tables and indexes for the trading platform
+-- HydraFlow-X Database Schema
+-- PostgreSQL initialization script
 
--- Create extensions
+-- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
-CREATE EXTENSION IF NOT EXISTS "btree_gist";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+CREATE EXTENSION IF NOT EXISTS "btree_gin";
 
--- Create schemas
-CREATE SCHEMA IF NOT EXISTS trading;
-CREATE SCHEMA IF NOT EXISTS analytics;
-CREATE SCHEMA IF NOT EXISTS monitoring;
-CREATE SCHEMA IF NOT EXISTS config;
+-- Create database (if not exists)
+-- Note: This should be run by a superuser or database owner
 
--- Set search path
-SET search_path TO trading, analytics, monitoring, config, public;
+-- Create enum types
+CREATE TYPE trading_platform AS ENUM (
+    'UNISWAP_V3',
+    'RAYDIUM_AMM',
+    'ORCA_WHIRLPOOL',
+    'METEORA_DLMM',
+    'PUMP_FUN',
+    'MOONSHOT',
+    'JUPITER',
+    'SERUM'
+);
 
--- Trading tables
-CREATE TABLE IF NOT EXISTS trading.positions (
+CREATE TYPE order_side AS ENUM ('BUY', 'SELL');
+CREATE TYPE order_type AS ENUM ('MARKET', 'LIMIT', 'STOP_LOSS', 'TAKE_PROFIT', 'TRAILING_STOP');
+CREATE TYPE order_status AS ENUM ('PENDING', 'OPEN', 'PARTIALLY_FILLED', 'FILLED', 'CANCELLED', 'EXPIRED', 'REJECTED');
+
+-- Create trades table
+CREATE TABLE IF NOT EXISTS trades (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    symbol VARCHAR(50) NOT NULL,
-    side VARCHAR(4) NOT NULL CHECK (side IN ('buy', 'sell')),
-    amount DECIMAL(24,8) NOT NULL,
-    price DECIMAL(24,8) NOT NULL,
-    value DECIMAL(24,8) NOT NULL,
-    pnl DECIMAL(24,8) DEFAULT 0,
-    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'closed', 'liquidated')),
-    wallet_address VARCHAR(42) NOT NULL,
-    chain VARCHAR(20) NOT NULL,
+    order_id VARCHAR(255) NOT NULL,
+    platform trading_platform NOT NULL,
+    token_in VARCHAR(255) NOT NULL,
+    token_out VARCHAR(255) NOT NULL,
+    side order_side NOT NULL,
+    amount_in BIGINT NOT NULL,
+    amount_out BIGINT NOT NULL,
+    amount_in_min BIGINT,
+    amount_out_min BIGINT,
+    price DECIMAL(36, 18),
+    slippage_percent DECIMAL(10, 4),
+    gas_used BIGINT,
+    gas_price BIGINT,
+    transaction_hash VARCHAR(255) UNIQUE,
+    block_number VARCHAR(255),
+    status order_status NOT NULL DEFAULT 'PENDING',
+    error_message TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    closed_at TIMESTAMP WITH TIME ZONE
+    executed_at TIMESTAMP WITH TIME ZONE,
+    wallet_address VARCHAR(255) NOT NULL,
+    dex_address VARCHAR(255),
+    pool_address VARCHAR(255),
+    fee_percent DECIMAL(10, 4),
+    fee_amount BIGINT,
+    chain_id VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS trading.trades (
+-- Create positions table
+CREATE TABLE IF NOT EXISTS positions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    position_id UUID REFERENCES trading.positions(id),
-    symbol VARCHAR(50) NOT NULL,
-    type VARCHAR(4) NOT NULL CHECK (type IN ('buy', 'sell')),
-    amount DECIMAL(24,8) NOT NULL,
-    price DECIMAL(24,8) NOT NULL,
-    fee DECIMAL(24,8) DEFAULT 0,
-    gas_used BIGINT DEFAULT 0,
-    gas_price DECIMAL(24,8) DEFAULT 0,
-    transaction_hash VARCHAR(66),
-    block_number BIGINT,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'cancelled')),
-    execution_time_ms INTEGER,
-    slippage_bps INTEGER,
-    mev_protection_level VARCHAR(20),
-    wallet_address VARCHAR(42) NOT NULL,
-    chain VARCHAR(20) NOT NULL,
+    wallet_address VARCHAR(255) NOT NULL,
+    token_address VARCHAR(255) NOT NULL,
+    token_symbol VARCHAR(20) NOT NULL,
+    balance BIGINT NOT NULL DEFAULT 0,
+    usd_value DECIMAL(36, 18),
+    avg_entry_price DECIMAL(36, 18),
+    current_price DECIMAL(36, 18),
+    pnl_percent DECIMAL(10, 4),
+    pnl_usd DECIMAL(36, 18),
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    completed_at TIMESTAMP WITH TIME ZONE
+    volatility_24h DECIMAL(10, 4),
+    liquidity_score DECIMAL(10, 4),
+    is_whitelisted BOOLEAN DEFAULT false,
+    tags TEXT[],
+    UNIQUE(wallet_address, token_address)
 );
 
-CREATE TABLE IF NOT EXISTS trading.wallets (
+-- Create market_data table
+CREATE TABLE IF NOT EXISTS market_data (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    address VARCHAR(42) UNIQUE NOT NULL,
-    name VARCHAR(100),
-    encrypted_private_key TEXT,
-    is_primary BOOLEAN DEFAULT FALSE,
-    is_enabled BOOLEAN DEFAULT TRUE,
-    balance_eth DECIMAL(24,8) DEFAULT 0,
-    balance_sol DECIMAL(24,8) DEFAULT 0,
-    active_trades INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS trading.strategies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(100) NOT NULL,
-    type VARCHAR(50) NOT NULL,
-    config JSONB NOT NULL,
-    is_enabled BOOLEAN DEFAULT TRUE,
-    performance_metrics JSONB,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Analytics tables
-CREATE TABLE IF NOT EXISTS analytics.performance_metrics (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    metric_name VARCHAR(100) NOT NULL,
-    metric_value DECIMAL(24,8) NOT NULL,
-    metric_unit VARCHAR(20),
+    platform trading_platform NOT NULL,
+    token_address VARCHAR(255) NOT NULL,
+    token_symbol VARCHAR(20) NOT NULL,
+    pair_address VARCHAR(255),
+    base_token VARCHAR(255),
+    quote_token VARCHAR(255),
+    price_usd DECIMAL(36, 18),
+    price_native DECIMAL(36, 18),
+    volume_24h DECIMAL(36, 18),
+    market_cap DECIMAL(36, 18),
+    liquidity_usd DECIMAL(36, 18),
+    total_supply BIGINT,
+    price_change_24h DECIMAL(10, 4),
+    price_change_7d DECIMAL(10, 4),
+    price_change_30d DECIMAL(10, 4),
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    labels JSONB
+    pool_liquidity BIGINT,
+    fee_tier DECIMAL(10, 4),
+    tvl BIGINT,
+    apy DECIMAL(10, 4),
+    UNIQUE(platform, token_address, timestamp)
 );
 
-CREATE TABLE IF NOT EXISTS analytics.latency_measurements (
+-- Create liquidity_pools table
+CREATE TABLE IF NOT EXISTS liquidity_pools (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    component VARCHAR(50) NOT NULL,
-    operation VARCHAR(50) NOT NULL,
-    latency_ms DECIMAL(10,3) NOT NULL,
+    platform trading_platform NOT NULL,
+    pool_address VARCHAR(255) UNIQUE NOT NULL,
+    token0_address VARCHAR(255) NOT NULL,
+    token1_address VARCHAR(255) NOT NULL,
+    token0_symbol VARCHAR(20) NOT NULL,
+    token1_symbol VARCHAR(20) NOT NULL,
+    token0_reserve BIGINT NOT NULL DEFAULT 0,
+    token1_reserve BIGINT NOT NULL DEFAULT 0,
+    total_liquidity BIGINT NOT NULL DEFAULT 0,
+    fee_tier DECIMAL(10, 4),
+    apy DECIMAL(10, 4),
+    impermanent_loss_24h DECIMAL(10, 4),
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create analytics_data table (time-series data for ClickHouse-style analytics)
+CREATE TABLE IF NOT EXISTS analytics_data (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    metric_name VARCHAR(255) NOT NULL,
+    metric_type VARCHAR(100) NOT NULL,
+    value DECIMAL(36, 18) NOT NULL,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    metadata JSONB
+    time_bucket VARCHAR(10) NOT NULL, -- '1m', '5m', '1h', '1d', etc.
+    platform trading_platform,
+    token_symbol VARCHAR(20),
+    wallet_address VARCHAR(255),
+    strategy_name VARCHAR(255),
+    tags JSONB,
+    INDEX idx_analytics_timestamp (timestamp),
+    INDEX idx_analytics_metric (metric_name, timestamp),
+    INDEX idx_analytics_platform (platform, timestamp)
 );
 
-CREATE TABLE IF NOT EXISTS analytics.market_data (
+-- Create risk_metrics table
+CREATE TABLE IF NOT EXISTS risk_metrics (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    symbol VARCHAR(50) NOT NULL,
-    price DECIMAL(24,8) NOT NULL,
-    volume_24h DECIMAL(24,8),
-    market_cap DECIMAL(24,8),
-    change_24h DECIMAL(8,4),
-    liquidity DECIMAL(24,8),
-    source VARCHAR(50) NOT NULL,
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    wallet_address VARCHAR(255) NOT NULL,
+    total_portfolio_value DECIMAL(36, 18),
+    total_pnl_usd DECIMAL(36, 18),
+    total_pnl_percent DECIMAL(10, 4),
+    max_drawdown_percent DECIMAL(10, 4),
+    sharpe_ratio DECIMAL(10, 4),
+    volatility_annualized DECIMAL(10, 4),
+    total_trades BIGINT DEFAULT 0,
+    winning_trades BIGINT DEFAULT 0,
+    losing_trades BIGINT DEFAULT 0,
+    win_rate_percent DECIMAL(10, 4),
+    avg_trade_size_usd DECIMAL(36, 18),
+    largest_win_usd DECIMAL(36, 18),
+    largest_loss_usd DECIMAL(36, 18),
+    calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    max_position_size_percent DECIMAL(10, 4) DEFAULT 10.0,
+    max_daily_loss_percent DECIMAL(10, 4) DEFAULT 5.0,
+    max_drawdown_limit_percent DECIMAL(10, 4) DEFAULT 20.0,
+    risk_limits_breached BOOLEAN DEFAULT false,
+    UNIQUE(wallet_address, calculated_at)
 );
 
--- Monitoring tables
-CREATE TABLE IF NOT EXISTS monitoring.system_health (
+-- Create performance_metrics table
+CREATE TABLE IF NOT EXISTS performance_metrics (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    component VARCHAR(100) NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('healthy', 'warning', 'error', 'unknown')),
-    message TEXT,
-    uptime_seconds BIGINT,
-    last_check TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    metadata JSONB
-);
-
-CREATE TABLE IF NOT EXISTS monitoring.alerts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    alert_type VARCHAR(50) NOT NULL,
-    severity VARCHAR(20) NOT NULL CHECK (severity IN ('info', 'warning', 'error', 'critical')),
-    title VARCHAR(200) NOT NULL,
-    description TEXT,
-    component VARCHAR(100),
-    is_resolved BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    resolved_at TIMESTAMP WITH TIME ZONE,
-    metadata JSONB
-);
-
-CREATE TABLE IF NOT EXISTS monitoring.mev_protection_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    trade_id UUID REFERENCES trading.trades(id),
-    protection_type VARCHAR(50) NOT NULL,
-    threat_type VARCHAR(50),
-    action_taken VARCHAR(100),
-    effectiveness_score DECIMAL(5,2),
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    details JSONB
-);
-
--- Configuration tables
-CREATE TABLE IF NOT EXISTS config.api_configs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    provider VARCHAR(50) UNIQUE NOT NULL,
-    encrypted_api_key TEXT,
-    encrypted_secret_key TEXT,
-    base_url VARCHAR(255),
-    rate_limit_per_second INTEGER DEFAULT 100,
-    is_enabled BOOLEAN DEFAULT TRUE,
-    custom_headers JSONB,
-    status VARCHAR(20) DEFAULT 'disconnected',
-    last_test TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS config.rpc_configs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    chain VARCHAR(50) NOT NULL,
-    provider VARCHAR(50) NOT NULL,
-    endpoint VARCHAR(255) NOT NULL,
-    encrypted_api_key TEXT,
-    websocket_endpoint VARCHAR(255),
-    timeout_ms INTEGER DEFAULT 5000,
-    max_connections INTEGER DEFAULT 10,
-    is_enabled BOOLEAN DEFAULT TRUE,
-    status VARCHAR(20) DEFAULT 'disconnected',
-    last_test TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(chain, provider)
+    cpu_usage_percent DECIMAL(10, 4),
+    memory_usage_mb BIGINT,
+    network_latency_ms DECIMAL(10, 4),
+    active_connections BIGINT,
+    total_requests BIGINT,
+    error_count BIGINT,
+    avg_response_time_ms DECIMAL(10, 4),
+    trades_per_second BIGINT,
+    orders_per_second BIGINT,
+    db_query_time_ms DECIMAL(10, 4),
+    db_connections_active BIGINT,
+    db_connections_idle BIGINT,
+    avg_slippage_percent DECIMAL(10, 4),
+    success_rate_percent DECIMAL(10, 4),
+    mev_attacks_detected BIGINT,
+    mev_attacks_prevented BIGINT
 );
 
 -- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_positions_symbol ON trading.positions(symbol);
-CREATE INDEX IF NOT EXISTS idx_positions_status ON trading.positions(status);
-CREATE INDEX IF NOT EXISTS idx_positions_wallet ON trading.positions(wallet_address);
-CREATE INDEX IF NOT EXISTS idx_positions_created_at ON trading.positions(created_at);
+CREATE INDEX IF NOT EXISTS idx_trades_wallet ON trades(wallet_address, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_trades_token_in ON trades(token_in, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_trades_token_out ON trades(token_out, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_trades_status ON trades(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_trades_transaction_hash ON trades(transaction_hash);
+CREATE INDEX IF NOT EXISTS idx_trades_created_at ON trades(created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_trades_symbol ON trading.trades(symbol);
-CREATE INDEX IF NOT EXISTS idx_trades_status ON trading.trades(status);
-CREATE INDEX IF NOT EXISTS idx_trades_wallet ON trading.trades(wallet_address);
-CREATE INDEX IF NOT EXISTS idx_trades_created_at ON trading.trades(created_at);
-CREATE INDEX IF NOT EXISTS idx_trades_tx_hash ON trading.trades(transaction_hash);
+CREATE INDEX IF NOT EXISTS idx_positions_wallet ON positions(wallet_address, last_updated DESC);
+CREATE INDEX IF NOT EXISTS idx_positions_token ON positions(token_address, last_updated DESC);
+CREATE INDEX IF NOT EXISTS idx_positions_pnl ON positions(pnl_percent DESC);
 
-CREATE INDEX IF NOT EXISTS idx_wallets_address ON trading.wallets(address);
-CREATE INDEX IF NOT EXISTS idx_wallets_primary ON trading.wallets(is_primary) WHERE is_primary = TRUE;
-CREATE INDEX IF NOT EXISTS idx_wallets_enabled ON trading.wallets(is_enabled) WHERE is_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_market_data_token ON market_data(token_address, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_market_data_platform ON market_data(platform, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_market_data_symbol ON market_data(token_symbol, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_market_data_timestamp ON market_data(timestamp DESC);
 
-CREATE INDEX IF NOT EXISTS idx_performance_metrics_name ON analytics.performance_metrics(metric_name);
-CREATE INDEX IF NOT EXISTS idx_performance_metrics_timestamp ON analytics.performance_metrics(timestamp);
+CREATE INDEX IF NOT EXISTS idx_pools_platform ON liquidity_pools(platform, last_updated DESC);
+CREATE INDEX IF NOT EXISTS idx_pools_tokens ON liquidity_pools(token0_address, token1_address);
+CREATE INDEX IF NOT EXISTS idx_pools_liquidity ON liquidity_pools(total_liquidity DESC);
 
-CREATE INDEX IF NOT EXISTS idx_latency_component ON analytics.latency_measurements(component);
-CREATE INDEX IF NOT EXISTS idx_latency_timestamp ON analytics.latency_measurements(timestamp);
+CREATE INDEX IF NOT EXISTS idx_risk_wallet ON risk_metrics(wallet_address, calculated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_risk_breached ON risk_metrics(risk_limits_breached, calculated_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_market_data_symbol ON analytics.market_data(symbol);
-CREATE INDEX IF NOT EXISTS idx_market_data_timestamp ON analytics.market_data(timestamp);
+CREATE INDEX IF NOT EXISTS idx_performance_timestamp ON performance_metrics(timestamp DESC);
 
-CREATE INDEX IF NOT EXISTS idx_system_health_component ON monitoring.system_health(component);
-CREATE INDEX IF NOT EXISTS idx_system_health_status ON monitoring.system_health(status);
-
-CREATE INDEX IF NOT EXISTS idx_alerts_severity ON monitoring.alerts(severity);
-CREATE INDEX IF NOT EXISTS idx_alerts_resolved ON monitoring.alerts(is_resolved);
-CREATE INDEX IF NOT EXISTS idx_alerts_created ON monitoring.alerts(created_at);
-
--- Create triggers for updated_at columns
+-- Create triggers for updated_at timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -219,81 +222,49 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_positions_updated_at BEFORE UPDATE ON trading.positions
+CREATE TRIGGER update_trades_updated_at BEFORE UPDATE ON trades
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_wallets_updated_at BEFORE UPDATE ON trading.wallets
+CREATE TRIGGER update_positions_updated_at BEFORE UPDATE ON positions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_strategies_updated_at BEFORE UPDATE ON trading.strategies
+CREATE TRIGGER update_pools_updated_at BEFORE UPDATE ON liquidity_pools
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_api_configs_updated_at BEFORE UPDATE ON config.api_configs
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_rpc_configs_updated_at BEFORE UPDATE ON config.rpc_configs
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- Insert default data
-INSERT INTO config.api_configs (provider, base_url, is_enabled, status) VALUES 
-    ('twitter', 'https://api.twitter.com/2', FALSE, 'disconnected'),
-    ('reddit', 'https://oauth.reddit.com', FALSE, 'disconnected'),
-    ('dexscreener', 'https://api.dexscreener.com/latest', FALSE, 'disconnected'),
-    ('gmgn', 'https://gmgn.ai/api', FALSE, 'disconnected')
-ON CONFLICT (provider) DO NOTHING;
-
-INSERT INTO config.rpc_configs (chain, provider, endpoint, is_enabled, status) VALUES 
-    ('ethereum', 'alchemy', 'https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY', FALSE, 'disconnected'),
-    ('solana', 'helius', 'https://rpc.helius.xyz/?api-key=YOUR_API_KEY', FALSE, 'disconnected'),
-    ('base', 'base', 'https://mainnet.base.org', FALSE, 'disconnected'),
-    ('arbitrum', 'arbitrum', 'https://arb1.arbitrum.io/rpc', FALSE, 'disconnected')
-ON CONFLICT (chain, provider) DO NOTHING;
-
--- Create views for easier querying
-CREATE OR REPLACE VIEW trading.active_positions AS
-SELECT * FROM trading.positions WHERE status = 'active';
-
-CREATE OR REPLACE VIEW trading.recent_trades AS
-SELECT * FROM trading.trades 
+-- Create views for common queries
+CREATE OR REPLACE VIEW recent_trades AS
+SELECT * FROM trades
 WHERE created_at >= NOW() - INTERVAL '24 hours'
 ORDER BY created_at DESC;
 
-CREATE OR REPLACE VIEW analytics.latest_metrics AS
-SELECT DISTINCT ON (metric_name) 
-    metric_name, metric_value, metric_unit, timestamp
-FROM analytics.performance_metrics
-ORDER BY metric_name, timestamp DESC;
+CREATE OR REPLACE VIEW portfolio_summary AS
+SELECT
+    wallet_address,
+    COUNT(*) as total_positions,
+    SUM(usd_value) as total_value,
+    SUM(pnl_usd) as total_pnl,
+    AVG(pnl_percent) as avg_pnl_percent,
+    MAX(last_updated) as last_updated
+FROM positions
+WHERE balance > 0
+GROUP BY wallet_address;
 
--- Grant permissions
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA trading TO hydraflow;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA analytics TO hydraflow;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA monitoring TO hydraflow;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA config TO hydraflow;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA trading TO hydraflow;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA analytics TO hydraflow;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA monitoring TO hydraflow;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA config TO hydraflow;
+CREATE OR REPLACE VIEW trading_stats_24h AS
+SELECT
+    COUNT(*) as total_trades,
+    COUNT(CASE WHEN status = 'FILLED' THEN 1 END) as successful_trades,
+    SUM(amount_in) as total_volume_in,
+    SUM(amount_out) as total_volume_out,
+    AVG(price) as avg_price,
+    AVG(slippage_percent) as avg_slippage,
+    SUM(gas_used * gas_price) as total_gas_cost
+FROM trades
+WHERE created_at >= NOW() - INTERVAL '24 hours';
 
--- Create materialized views for performance
-CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.trading_summary AS
-SELECT 
-    DATE_TRUNC('hour', created_at) as hour,
-    COUNT(*) as trade_count,
-    SUM(CASE WHEN type = 'buy' THEN amount ELSE 0 END) as total_buy_volume,
-    SUM(CASE WHEN type = 'sell' THEN amount ELSE 0 END) as total_sell_volume,
-    AVG(execution_time_ms) as avg_execution_time,
-    COUNT(CASE WHEN status = 'completed' THEN 1 END) * 100.0 / COUNT(*) as success_rate
-FROM trading.trades
-WHERE created_at >= NOW() - INTERVAL '7 days'
-GROUP BY DATE_TRUNC('hour', created_at)
-ORDER BY hour DESC;
+-- Insert some sample data (optional)
+-- This would typically be done by the application
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_trading_summary_hour ON analytics.trading_summary(hour);
-
--- Set up refresh for materialized view
-CREATE OR REPLACE FUNCTION refresh_trading_summary()
-RETURNS void AS $$
-BEGIN
-    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.trading_summary;
-END;
-$$ LANGUAGE plpgsql;
+-- Create database user (if needed)
+-- GRANT ALL PRIVILEGES ON DATABASE hydraflow TO hydraflow;
+-- GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO hydraflow;
+-- GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO hydraflow;

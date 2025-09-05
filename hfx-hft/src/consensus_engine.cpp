@@ -192,7 +192,7 @@ public:
         
         running_.store(true);
         aggregation_thread_ = std::make_unique<std::thread>(&AggregatorImpl::aggregation_loop, this);
-        std::cout << "[SignalAggregator] Started aggregation loop" << std::endl;
+        HFX_LOG_INFO("[SignalAggregator] Started aggregation loop");
     }
     
     void stop_aggregation_loop() {
@@ -200,7 +200,7 @@ public:
         if (aggregation_thread_ && aggregation_thread_->joinable()) {
             aggregation_thread_->join();
         }
-        std::cout << "[SignalAggregator] Stopped aggregation loop" << std::endl;
+        HFX_LOG_INFO("[SignalAggregator] Stopped aggregation loop");
     }
     
     void aggregation_loop() {

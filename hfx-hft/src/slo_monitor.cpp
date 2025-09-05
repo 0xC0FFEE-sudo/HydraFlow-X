@@ -30,7 +30,7 @@ public:
 };
 
 void monitor_slo() {
-    std::cout << "[SLOMonitor] SLO monitoring placeholder" << std::endl;
+    HFX_LOG_INFO("[SLOMonitor] SLO monitoring placeholder");
 }
 
 } // namespace hfx::hft

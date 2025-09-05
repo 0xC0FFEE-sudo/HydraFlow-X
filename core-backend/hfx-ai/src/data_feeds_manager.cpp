@@ -30,7 +30,7 @@ public:
     }
     
     bool initialize() {
-        std::cout << "🚀 Enhanced Data Feeds Manager - Real-time multi-source integration" << std::endl;
+        HFX_LOG_INFO("🚀 Enhanced Data Feeds Manager - Real-time multi-source integration");
         running_.store(true);
         return true;
     }
@@ -47,7 +47,7 @@ public:
     
     void start_real_time_feeds() {
         if (!running_.load()) {
-            std::cerr << "❌ Data feeds manager not initialized" << std::endl;
+            HFX_LOG_ERROR("❌ Data feeds manager not initialized");
             return;
         }
         
@@ -57,7 +57,7 @@ public:
         worker_threads_.emplace_back(&EnhancedDataFeedsManager::gmgn_feed_worker, this);
         worker_threads_.emplace_back(&EnhancedDataFeedsManager::reddit_feed_worker, this);
         
-        std::cout << "✅ Started real-time data feeds (4 sources)" << std::endl;
+        HFX_LOG_INFO("✅ Started real-time data feeds (4 sources)");
     }
     
     void register_callback(std::function<void(const std::string&, const std::string&, const std::string&, int64_t)> callback) {
@@ -84,7 +84,7 @@ private:
                     std::this_thread::sleep_for(std::chrono::seconds(2));
                 }
             } catch (const std::exception& e) {
-                std::cerr << "❌ Twitter feed error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("❌ Twitter feed error: " << e.what() << std::endl;
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(30));
@@ -102,7 +102,7 @@ private:
                     data_callback_("dexscreener", "trending", trending_data, timestamp);
                 }
             } catch (const std::exception& e) {
-                std::cerr << "❌ DexScreener feed error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("❌ DexScreener feed error: " << e.what() << std::endl;
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(15));
@@ -120,7 +120,7 @@ private:
                     data_callback_("gmgn", "smart_money", smart_money_data, timestamp);
                 }
             } catch (const std::exception& e) {
-                std::cerr << "❌ GMGN feed error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("❌ GMGN feed error: " << e.what() << std::endl;
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(20));
@@ -138,7 +138,7 @@ private:
                     data_callback_("reddit", "crypto_discussions", reddit_data, timestamp);
                 }
             } catch (const std::exception& e) {
-                std::cerr << "❌ Reddit feed error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("❌ Reddit feed error: " << e.what() << std::endl;
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(45));
@@ -148,7 +148,7 @@ private:
     std::string fetch_twitter_mentions(const std::string& keyword) {
         // Mock Twitter API implementation
         // In production, this would use Twitter API v2 with bearer token
-        std::cout << "🐦 Fetching Twitter mentions for: " << keyword << std::endl;
+        HFX_LOG_INFO("🐦 Fetching Twitter mentions for: " << keyword << std::endl;
         
         // Simulate API response with realistic data
         return R"({
@@ -170,7 +170,7 @@ private:
     
     std::string fetch_dexscreener_trending() {
         // Mock DexScreener API implementation
-        std::cout << "📊 Fetching trending tokens from DexScreener" << std::endl;
+        HFX_LOG_INFO("📊 Fetching trending tokens from DexScreener");
         
         return R"({
             "pairs": [
@@ -189,7 +189,7 @@ private:
     
     std::string fetch_gmgn_smart_money() {
         // Mock GMGN API implementation
-        std::cout << "💰 Fetching smart money data from GMGN" << std::endl;
+        HFX_LOG_INFO("💰 Fetching smart money data from GMGN");
         
         return R"({
             "data": [
@@ -207,7 +207,7 @@ private:
     
     std::string fetch_reddit_crypto_discussions() {
         // Mock Reddit API implementation
-        std::cout << "💬 Fetching crypto discussions from Reddit" << std::endl;
+        HFX_LOG_INFO("💬 Fetching crypto discussions from Reddit");
         
         return R"({
             "data": [

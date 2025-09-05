@@ -71,24 +71,24 @@ public:
     }
     
     bool initialize() {
-        std::cout << "🚀 Initializing Sentiment-to-Execution Pipeline" << std::endl;
+        HFX_LOG_INFO("🚀 Initializing Sentiment-to-Execution Pipeline");
         
         // Validate configuration
         if (!validate_config()) {
-            std::cerr << "❌ Invalid pipeline configuration" << std::endl;
+            HFX_LOG_ERROR("❌ Invalid pipeline configuration");
             return false;
         }
         
         // Initialize metrics
         reset_metrics();
         
-        std::cout << "✅ Pipeline initialized successfully" << std::endl;
+        HFX_LOG_INFO("✅ Pipeline initialized successfully");
         return true;
     }
     
     void start() {
         if (running_.load()) {
-            std::cout << "⚠️  Pipeline already running" << std::endl;
+            HFX_LOG_INFO("⚠️  Pipeline already running");
             return;
         }
         
@@ -105,7 +105,7 @@ public:
             worker_threads_.emplace_back(&PipelineImpl::execution_worker, this, i);
         }
         
-        std::cout << "🎯 Sentiment-to-Execution Pipeline started with " 
+        HFX_LOG_INFO("🎯 Sentiment-to-Execution Pipeline started with " 
                   << (worker_threads_.size() + 3) << " threads" << std::endl;
         
         // Send startup alert
@@ -136,7 +136,7 @@ public:
         }
         worker_threads_.clear();
         
-        std::cout << "🛑 Sentiment-to-execution pipeline stopped" << std::endl;
+        HFX_LOG_INFO("🛑 Sentiment-to-execution pipeline stopped");
         send_alert("pipeline_stop", "Pipeline stopped gracefully");
     }
     
@@ -189,12 +189,12 @@ public:
             try {
                 callback(alert_type, message);
             } catch (const std::exception& e) {
-                std::cerr << "Alert callback error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Alert callback error: " << e.what() << std::endl;
             }
         }
         
         // Also log to console
-        std::cout << "🚨 ALERT [" << alert_type << "]: " << message << std::endl;
+        HFX_LOG_INFO("🚨 ALERT [" << alert_type << "]: " << message << std::endl;
     }
     
     void emergency_stop_all_trading() {
@@ -210,7 +210,7 @@ public:
         total_exposure_.store(0.0);
         
         send_alert("emergency_stop", "Emergency stop activated - all trading halted");
-        std::cout << "🛑 EMERGENCY STOP: All trading halted" << std::endl;
+        HFX_LOG_INFO("🛑 EMERGENCY STOP: All trading halted");
     }
     
 private:
@@ -352,7 +352,7 @@ private:
     
     void execute_trading_signal(const TradingSignal& signal) {
         if (!trading_engine_) {
-            std::cerr << "❌ Trading engine not available" << std::endl;
+            HFX_LOG_ERROR("❌ Trading engine not available");
             return;
         }
         
@@ -412,7 +412,7 @@ private:
                     std::chrono::system_clock::now().time_since_epoch()).count());
             
         } catch (const std::exception& e) {
-            std::cerr << "❌ Trade execution error: " << e.what() << std::endl;
+            HFX_LOG_ERROR("❌ Trade execution error: " << e.what() << std::endl;
             result.success = false;
             result.error_message = e.what();
             metrics_.failed_trades.fetch_add(1);
@@ -587,7 +587,7 @@ private:
             try {
                 callback(signal);
             } catch (const std::exception& e) {
-                std::cerr << "Signal callback error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Signal callback error: " << e.what() << std::endl;
             }
         }
     }
@@ -598,7 +598,7 @@ private:
             try {
                 callback(result);
             } catch (const std::exception& e) {
-                std::cerr << "Execution callback error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("Execution callback error: " << e.what() << std::endl;
             }
         }
     }

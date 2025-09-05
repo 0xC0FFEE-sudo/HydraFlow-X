@@ -5,44 +5,352 @@
 
 #include "risk_manager.hpp"
 #include <iostream>
+#include <algorithm>
+#include <random>
+#include <cmath>
 
 namespace hfx::risk {
 
 // Forward-declared class implementations
 class RiskManager::VarCalculator {
 public:
-    VarCalculator() = default;
+    VarCalculator() : initialized_(false) {}
     ~VarCalculator() = default;
-    // VaR calculation implementation would go here
+
+    bool initialize() {
+        initialized_ = true;
+        return true;
+    }
+
+    double calculate_var(const std::unordered_map<std::string, double>& positions,
+                        const std::unordered_map<std::string, double>& volatilities,
+                        double confidence_level = 0.95,
+                        int num_simulations = 10000) {
+
+        if (!initialized_ || positions.empty()) {
+            return 0.0;
+        }
+
+        // Monte Carlo VaR calculation
+        std::vector<double> portfolio_returns;
+        portfolio_returns.reserve(num_simulations);
+
+        // Generate random returns for each simulation
+        for (int sim = 0; sim < num_simulations; ++sim) {
+            double portfolio_return = 0.0;
+
+            for (const auto& [asset, position] : positions) {
+                if (position == 0.0) continue;
+
+                auto vol_it = volatilities.find(asset);
+                double volatility = vol_it != volatilities.end() ? vol_it->second : 0.02; // 2% default vol
+
+                // Generate random normal return
+                double random_return = generate_normal_random(0.0, volatility);
+                portfolio_return += position * random_return;
+            }
+
+            portfolio_returns.push_back(portfolio_return);
+        }
+
+        // Sort returns and find VaR at confidence level
+        std::sort(portfolio_returns.begin(), portfolio_returns.end());
+        size_t index = static_cast<size_t>((1.0 - confidence_level) * portfolio_returns.size());
+
+        return index < portfolio_returns.size() ? -portfolio_returns[index] : 0.0;
+    }
+
+    double calculate_cvar(const std::vector<double>& returns, double confidence_level = 0.95) {
+        if (returns.empty()) return 0.0;
+
+        std::vector<double> sorted_returns = returns;
+        std::sort(sorted_returns.begin(), sorted_returns.end());
+
+        size_t tail_start = static_cast<size_t>((1.0 - confidence_level) * sorted_returns.size());
+        if (tail_start >= sorted_returns.size()) return 0.0;
+
+        double sum = 0.0;
+        for (size_t i = tail_start; i < sorted_returns.size(); ++i) {
+            sum += sorted_returns[i];
+        }
+
+        return -(sum / (sorted_returns.size() - tail_start));
+    }
+
+private:
+    bool initialized_;
+
+    // Simple Box-Muller transform for normal random generation
+    double generate_normal_random(double mean, double stddev) {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::normal_distribution<> dist(0.0, 1.0);
+
+        return mean + stddev * dist(gen);
+    }
 };
 
 class RiskManager::AnomalyDetector {
 public:
-    AnomalyDetector() = default;
+    AnomalyDetector() : window_size_(100), threshold_(3.0) {}
     ~AnomalyDetector() = default;
-    // Risk anomaly detection implementation would go here
+
+    void add_observation(const std::string& metric, double value) {
+        auto& history = metric_history_[metric];
+        history.push_back(value);
+
+        // Keep only recent observations
+        if (history.size() > window_size_) {
+            history.erase(history.begin());
+        }
+    }
+
+    bool is_anomaly(const std::string& metric, double value) const {
+        auto it = metric_history_.find(metric);
+        if (it == metric_history_.end() || it->second.size() < 10) {
+            return false; // Not enough data
+        }
+
+        const auto& history = it->second;
+
+        // Calculate mean and standard deviation
+        double sum = 0.0;
+        for (double val : history) {
+            sum += val;
+        }
+        double mean = sum / history.size();
+
+        double variance = 0.0;
+        for (double val : history) {
+            double diff = val - mean;
+            variance += diff * diff;
+        }
+        double stddev = std::sqrt(variance / (history.size() - 1));
+
+        if (stddev == 0.0) return false;
+
+        // Z-score based anomaly detection
+        double z_score = std::abs((value - mean) / stddev);
+        return z_score > threshold_;
+    }
+
+    void set_threshold(double threshold) {
+        threshold_ = threshold;
+    }
+
+    void set_window_size(size_t window_size) {
+        window_size_ = window_size;
+    }
+
+private:
+    size_t window_size_;
+    double threshold_;
+    std::unordered_map<std::string, std::vector<double>> metric_history_;
 };
 
 class RiskManager::CircuitBreakerSystem {
 public:
-    CircuitBreakerSystem() = default;
+    CircuitBreakerSystem() : trading_halted_(false) {}
     ~CircuitBreakerSystem() = default;
-    // Circuit breaker implementation would go here
+
+    void add_breaker(const CircuitBreakerConfig& config) {
+        breakers_[config.type] = config;
+        status_[config.type] = {config.type, false, TimeStamp{}, TimeStamp{}, 0, ""};
+    }
+
+    bool check_and_trigger(CircuitBreakerType type, double value) {
+        auto it = breakers_.find(type);
+        if (it == breakers_.end()) return false;
+
+        const auto& config = it->second;
+        if (!config.enabled) return false;
+
+        bool should_trigger = false;
+
+        switch (type) {
+            case CircuitBreakerType::PRICE_MOVEMENT:
+                should_trigger = std::abs(value) > config.threshold;
+                break;
+            case CircuitBreakerType::VOLUME_SPIKE:
+                should_trigger = value > config.threshold;
+                break;
+            case CircuitBreakerType::VOLATILITY_SURGE:
+                should_trigger = value > config.threshold;
+                break;
+            case CircuitBreakerType::DRAWDOWN_LIMIT:
+                should_trigger = value > config.threshold;
+                break;
+            case CircuitBreakerType::GAS_PRICE_SPIKE:
+                should_trigger = value > config.threshold;
+                break;
+            default:
+                should_trigger = false;
+        }
+
+        if (should_trigger) {
+            trigger_breaker(type, "Threshold exceeded: " + std::to_string(value));
+            return true;
+        }
+
+        return false;
+    }
+
+    void trigger_breaker(CircuitBreakerType type, const std::string& reason) {
+        auto it = status_.find(type);
+        if (it == status_.end()) return;
+
+        auto& status = it->second;
+        status.triggered = true;
+        status.trigger_time = std::chrono::high_resolution_clock::now();
+        status.trigger_count_today++;
+        status.reason = reason;
+
+        // Calculate resume time
+        auto config_it = breakers_.find(type);
+        if (config_it != breakers_.end()) {
+            status.resume_time = status.trigger_time + config_it->second.cooldown;
+        }
+
+        trading_halted_ = true;
+    }
+
+    void resume_breaker(CircuitBreakerType type) {
+        auto it = status_.find(type);
+        if (it != status_.end()) {
+            it->second.triggered = false;
+            it->second.reason = "";
+        }
+
+        // Check if any breakers are still triggered
+        trading_halted_ = false;
+        for (const auto& [_, status] : status_) {
+            if (status.triggered) {
+                trading_halted_ = true;
+                break;
+            }
+        }
+    }
+
+    bool is_trading_halted() const {
+        return trading_halted_;
+    }
+
+    std::vector<CircuitBreakerStatus> get_status() const {
+        std::vector<CircuitBreakerStatus> result;
+        for (const auto& [type, status] : status_) {
+            result.push_back(status);
+        }
+        return result;
+    }
+
+    void update_daily_counts() {
+        for (auto& [_, status] : status_) {
+            status.trigger_count_today = 0;
+        }
+    }
+
+private:
+    std::unordered_map<CircuitBreakerType, CircuitBreakerConfig> breakers_;
+    std::unordered_map<CircuitBreakerType, CircuitBreakerStatus> status_;
+    bool trading_halted_;
 };
 
 class RiskManager::PortfolioAnalytics {
 public:
     PortfolioAnalytics() = default;
     ~PortfolioAnalytics() = default;
-    // Portfolio analytics implementation would go here
+
+    void update_position(const std::string& asset, double quantity, double price) {
+        positions_[asset] = quantity;
+        avg_prices_[asset] = price;
+    }
+
+    void update_market_price(const std::string& asset, double price) {
+        market_prices_[asset] = price;
+    }
+
+    RiskMetrics calculate_metrics() {
+        RiskMetrics metrics{};
+        metrics.last_update = std::chrono::high_resolution_clock::now();
+
+        auto start_time = std::chrono::high_resolution_clock::now();
+
+        // Calculate portfolio value and P&L
+        double portfolio_value = 0.0;
+        double unrealized_pnl = 0.0;
+
+        for (const auto& [asset, quantity] : positions_) {
+            if (quantity == 0.0) continue;
+
+            auto price_it = market_prices_.find(asset);
+            auto avg_price_it = avg_prices_.find(asset);
+
+            if (price_it != market_prices_.end() && avg_price_it != avg_prices_.end()) {
+                double current_value = quantity * price_it->second;
+                double entry_value = quantity * avg_price_it->second;
+
+                portfolio_value += current_value;
+                unrealized_pnl += (current_value - entry_value);
+            }
+        }
+
+        metrics.portfolio_value = portfolio_value;
+        metrics.unrealized_pnl = unrealized_pnl;
+
+        // Calculate concentration metrics
+        if (portfolio_value > 0.0) {
+            double max_position = 0.0;
+            for (const auto& [asset, quantity] : positions_) {
+                if (quantity == 0.0) continue;
+
+                auto price_it = market_prices_.find(asset);
+                if (price_it != market_prices_.end()) {
+                    double position_value = std::abs(quantity) * price_it->second;
+                    max_position = std::max(max_position, position_value);
+                }
+            }
+
+            metrics.max_position_weight = max_position / portfolio_value;
+        }
+
+        metrics.num_positions = positions_.size();
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        metrics.calculation_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            end_time - start_time).count();
+
+        return metrics;
+    }
+
+    std::unordered_map<std::string, double> get_positions() const {
+        return positions_;
+    }
+
+private:
+    std::unordered_map<std::string, double> positions_;
+    std::unordered_map<std::string, double> avg_prices_;
+    std::unordered_map<std::string, double> market_prices_;
 };
 
+#ifdef __APPLE__
 class AppleRiskMLAccelerator {
 public:
     AppleRiskMLAccelerator() = default;
     ~AppleRiskMLAccelerator() = default;
-    // Apple ML risk acceleration implementation would go here
+
+    bool initialize() {
+        // Initialize Apple Neural Engine for risk calculations
+        // This would use Metal Performance Shaders or Core ML
+        return true;
+    }
+
+    // Placeholder for Apple-specific ML acceleration
+    double accelerated_var_calculation(const std::vector<double>& data) {
+        // Would use Apple Neural Engine for fast risk calculations
+        return 0.0;
+    }
 };
+#endif
 
 RiskManager::RiskManager()
     : var_calculator_(nullptr),
@@ -68,15 +376,15 @@ bool RiskManager::initialize() {
     }
     
     if (!initialize_apple_ml()) {
-        std::cout << "[RiskManager] Warning: Apple ML acceleration not available\n";
+        HFX_LOG_INFO("[RiskManager] Warning: Apple ML acceleration not available\n";
     }
     
     if (!initialize_risk_libraries()) {
-        std::cout << "[RiskManager] Warning: Risk libraries not available\n";
+        HFX_LOG_INFO("[RiskManager] Warning: Risk libraries not available\n";
     }
     
     running_.store(true, std::memory_order_release);
-    std::cout << "[RiskManager] Initialized successfully\n";
+    HFX_LOG_INFO("[RiskManager] Initialized successfully\n";
     return true;
 }
 
@@ -86,7 +394,7 @@ void RiskManager::shutdown() {
     }
     
     running_.store(false, std::memory_order_release);
-    std::cout << "[RiskManager] Shutdown complete\n";
+    HFX_LOG_INFO("[RiskManager] Shutdown complete\n";
 }
 
 bool RiskManager::validate_signal(const strat::TradingSignal& signal) {
@@ -124,7 +432,7 @@ bool RiskManager::validate_signal(const strat::TradingSignal& signal) {
         end_time - start_time).count();
     update_statistics(processing_time);
     
-    std::cout << "[RiskManager] Validated signal for " << signal.asset_pair 
+    HFX_LOG_INFO("[RiskManager] Validated signal for " << signal.asset_pair 
               << " with Kelly size " << kelly_size << "\n";
     return true;
 }
@@ -151,7 +459,7 @@ void RiskManager::recalculate_risk_metrics() {
     cached_metrics_.sharpe_ratio = 1.5;
     cached_metrics_.last_update = std::chrono::high_resolution_clock::now();
     
-    std::cout << "[RiskManager] Risk metrics recalculated\n";
+    HFX_LOG_INFO("[RiskManager] Risk metrics recalculated\n";
 }
 
 RiskMetrics RiskManager::get_risk_metrics() const {
@@ -167,12 +475,12 @@ RiskMetrics RiskManager::get_risk_metrics() const {
 }
 
 void RiskManager::configure_circuit_breaker(const CircuitBreakerConfig& config) {
-    std::cout << "[RiskManager] Configured circuit breaker: " << config.description << "\n";
+    HFX_LOG_INFO("[RiskManager] Configured circuit breaker: " << config.description << "\n";
 }
 
 void RiskManager::set_position_limit(const PositionLimit& limit) {
     position_limits_[limit.asset] = limit;
-    std::cout << "[RiskManager] Set position limit for " << limit.asset 
+    HFX_LOG_INFO("[RiskManager] Set position limit for " << limit.asset 
               << ": $" << limit.max_notional << "\n";
 }
 
@@ -194,14 +502,14 @@ RiskManager::RiskStatistics RiskManager::get_statistics() const {
 
 bool RiskManager::initialize_apple_ml() {
 #ifdef __APPLE__
-    std::cout << "[RiskManager] Apple ML risk acceleration initialized\n";
+    HFX_LOG_INFO("[RiskManager] Apple ML risk acceleration initialized\n";
     return true;
 #endif
     return false;
 }
 
 bool RiskManager::initialize_risk_libraries() {
-    std::cout << "[RiskManager] Risk libraries initialized\n";
+    HFX_LOG_INFO("[RiskManager] Risk libraries initialized\n";
     return true;
 }
 
@@ -247,7 +555,7 @@ double RiskManager::calculate_kelly_position_size(const strat::TradingSignal& si
 void RiskManager::trigger_risk_alert(RiskLevel level, const std::string& message) {
     risk_alerts_generated_.fetch_add(1, std::memory_order_relaxed);
     
-    std::cout << "[RiskManager] RISK ALERT [" << static_cast<int>(level) << "]: " << message << "\n";
+    HFX_LOG_INFO("[RiskManager] RISK ALERT [" << static_cast<int>(level) << "]: " << message << "\n";
     
     if (risk_alert_callback_) {
         risk_alert_callback_(level, message);

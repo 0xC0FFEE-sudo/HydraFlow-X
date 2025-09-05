@@ -17,6 +17,11 @@ add_library(hfx-hft STATIC
     src/memecoin_integrations.cpp
     src/mev_strategy.cpp
     src/hft_main.cpp
+    src/dex_integration.cpp
+    src/wallet_integration.cpp
+    src/permit2_integration.cpp
+    src/order_routing_engine.cpp
+    src/jito_mev_integration.cpp
 )
 
 target_include_directories(hfx-hft PUBLIC

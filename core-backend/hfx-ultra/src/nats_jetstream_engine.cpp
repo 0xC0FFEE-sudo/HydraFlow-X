@@ -4,6 +4,7 @@
  */
 
 #include "nats_jetstream_engine.hpp"
+#include "hfx-log/include/logger.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
@@ -37,13 +38,13 @@ public:
             pq.size.store(0);
         }
         
-        std::cout << "🚀 Initializing NATS JetStream Engine..." << std::endl;
-        std::cout << "   Servers: ";
+        HFX_LOG_INFO("🚀 Initializing NATS JetStream Engine...");
+        std::string servers_list = "";
         for (const auto& server : config_.servers) {
-            std::cout << server << " ";
+            servers_list += server + " ";
         }
-        std::cout << std::endl;
-        std::cout << "   Cluster: " << config_.cluster_name << std::endl;
+        HFX_LOG_INFO("   Servers: " + servers_list);
+        HFX_LOG_INFO("   Cluster: " + config_.cluster_name);
     }
 
     ~Impl() {
@@ -52,11 +53,11 @@ public:
 
     bool connect() {
         if (connected_.load()) {
-            std::cout << "⚠️  Already connected to NATS JetStream" << std::endl;
+            HFX_LOG_INFO("⚠️  Already connected to NATS JetStream");
             return true;
         }
 
-        std::cout << "🔌 Connecting to NATS JetStream cluster..." << std::endl;
+        HFX_LOG_INFO("🔌 Connecting to NATS JetStream cluster...");
 
 #ifdef USE_REAL_NATS
         // Real NATS implementation would go here
@@ -79,8 +80,8 @@ public:
             connection_handler_(true);
         }
 
-        std::cout << "✅ NATS JetStream connected successfully" << std::endl;
-        std::cout << "   JetStream enabled: " << (jetstream_enabled_.load() ? "Yes" : "No") << std::endl;
+        HFX_LOG_INFO("✅ NATS JetStream connected successfully");
+        HFX_LOG_INFO("   JetStream enabled: " + std::string(jetstream_enabled_.load() ? "Yes" : "No"));
         
         return true;
     }
@@ -90,7 +91,7 @@ public:
             return true;
         }
 
-        std::cout << "🔌 Disconnecting from NATS JetStream..." << std::endl;
+        HFX_LOG_INFO("🔌 Disconnecting from NATS JetStream...");
 
         shutdown_requested_.store(true);
         
@@ -127,7 +128,7 @@ public:
             connection_handler_(false);
         }
 
-        std::cout << "✅ NATS JetStream disconnected" << std::endl;
+        HFX_LOG_INFO("✅ NATS JetStream disconnected");
         return true;
     }
 
@@ -145,12 +146,12 @@ public:
             return false;
         }
 
-        std::cout << "📊 Creating JetStream: " << stream_config.name << std::endl;
+        HFX_LOG_INFO("📊 Creating JetStream: " + stream_config.name);
 
         // Mock implementation
         std::lock_guard<std::mutex> lock(streams_mutex_);
         streams_[stream_config.name] = stream_config;
-        std::cout << "✅ Mock stream created: " << stream_config.name << std::endl;
+        HFX_LOG_INFO("✅ Mock stream created: " + stream_config.name);
 
         return true;
     }
@@ -202,13 +203,13 @@ public:
         }
 
         metrics_.active_subscriptions.fetch_add(1);
-        std::cout << "📨 Mock subscribed to: " << subject << " (ID: " << sub_id << ")" << std::endl;
+        HFX_LOG_INFO("📨 Mock subscribed to: " + subject + " (ID: " + std::to_string(sub_id) + ")");
         
         return sub_id;
     }
 
     bool setup_trading_streams(const TradingStreams& streams) {
-        std::cout << "🏗️  Setting up trading streams..." << std::endl;
+        HFX_LOG_INFO("🏗️  Setting up trading streams...");
 
         std::vector<StreamConfig> configs = {
             create_market_data_stream_config(streams.market_data),
@@ -222,20 +223,20 @@ public:
         bool all_success = true;
         for (const auto& config : configs) {
             if (!create_stream(config)) {
-                std::cerr << "❌ Failed to create stream: " << config.name << std::endl;
+                HFX_LOG_ERROR("❌ Failed to create stream: " + config.name);
                 all_success = false;
             }
         }
 
         if (all_success) {
-            std::cout << "✅ All trading streams created successfully" << std::endl;
+            HFX_LOG_INFO("✅ All trading streams created successfully");
         }
 
         return all_success;
     }
     
     bool delete_stream(const std::string& stream_name) {
-        std::cout << "🗑️  Deleting JetStream: " << stream_name << std::endl;
+        HFX_LOG_INFO("🗑️  Deleting JetStream: " + stream_name);
         std::lock_guard<std::mutex> lock(streams_mutex_);
         streams_.erase(stream_name);
         return true;
@@ -267,7 +268,7 @@ public:
     }
 
     void reset_metrics() {
-        std::cout << "📊 Resetting NATS metrics" << std::endl;
+        HFX_LOG_INFO("📊 Resetting NATS metrics");
         
         metrics_.messages_published.store(0);
         metrics_.messages_received.store(0);
@@ -368,7 +369,7 @@ private:
         if (error_handler_) {
             error_handler_(error);
         }
-        std::cerr << "❌ NATS Error: " << error << std::endl;
+        HFX_LOG_ERROR("❌ NATS Error: " + error);
     }
 
     std::string generate_subscription_id() {
@@ -377,7 +378,7 @@ private:
     }
 
     void connection_monitor_worker() {
-        std::cout << "🔍 Starting connection monitor worker" << std::endl;
+        HFX_LOG_INFO("🔍 Starting connection monitor worker");
         
         while (threads_running_.load()) {
             std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -387,18 +388,18 @@ private:
             }
         }
         
-        std::cout << "🔍 Connection monitor worker stopped" << std::endl;
+        HFX_LOG_INFO("🔍 Connection monitor worker stopped");
     }
 
     void message_processor_worker() {
-        std::cout << "📨 Starting message processor worker" << std::endl;
+        HFX_LOG_INFO("📨 Starting message processor worker");
         
         while (threads_running_.load()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             // Process incoming messages in real implementation
         }
         
-        std::cout << "📨 Message processor worker stopped" << std::endl;
+        HFX_LOG_INFO("📨 Message processor worker stopped");
     }
 
     StreamConfig create_market_data_stream_config(const std::string& prefix) {

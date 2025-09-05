@@ -8,7 +8,7 @@
 namespace hfx::hft {
 
 void simulate_market() {
-    std::cout << "[MarketSimulator] Market simulation placeholder" << std::endl;
+    HFX_LOG_INFO("[MarketSimulator] Market simulation placeholder");
 }
 
 } // namespace hfx::hft

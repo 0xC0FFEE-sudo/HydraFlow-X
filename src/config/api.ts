@@ -2,44 +2,56 @@
 
 export const API_CONFIG = {
   // C++ REST API endpoints
-  REST_BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+  REST_BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8083',
 
   // WebSocket endpoints for real-time data
-  WS_BASE_URL: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8081',
+  WS_BASE_URL: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8083',
   
   // API endpoints mapping to C++ backend routes
   ENDPOINTS: {
     // System & Health
-    HEALTH: '/health',
-    SYSTEM_METRICS: '/api/system/metrics',
-    PERFORMANCE: '/api/performance',
-    ALERTS: '/api/alerts',
-    
+    STATUS: '/api/v1/status',
+    SYSTEM_INFO: '/api/v1/system/info',
+    HEALTH: '/api/v1/health',
+    METRICS: '/api/v1/metrics',
+    PERFORMANCE: '/api/v1/performance/stats',
+
     // Trading
-    POSITIONS: '/api/trading/positions',
-    TRADES: '/api/trading/trades',
-    ORDER_BOOK: '/api/trading/orderbook',
-    PLACE_ORDER: '/api/trading/order',
-    CANCEL_ORDER: '/api/trading/order/cancel',
-    STRATEGIES: '/api/trading/strategies',
-    
+    ORDERS: '/api/v1/trading/orders',
+    CREATE_ORDER: '/api/v1/trading/orders',
+    POSITIONS: '/api/v1/trading/positions',
+    BALANCES: '/api/v1/trading/balances',
+    TRADE_HISTORY: '/api/v1/trading/history',
+    TRADES: '/api/v1/trading/trades',
+    MARKET_PRICES: '/api/v1/market/prices',
+    START_TRADING: '/api/v1/trading/start',
+    STOP_TRADING: '/api/v1/trading/stop',
+    UPDATE_CONFIG: '/api/v1/config/update',
+    CONFIG: '/api/v1/config',
+    WALLETS: '/api/v1/wallets',
+    ANALYTICS: '/api/v1/analytics',
+
+    // Risk Management
+    RISK_METRICS: '/api/v1/risk/metrics',
+    CIRCUIT_BREAKERS: '/api/v1/risk/circuit-breakers',
+    TRADING_ALLOWED: '/api/v1/risk/trading-allowed',
+
     // MEV Protection
-    MEV_STATUS: '/api/mev/status',
-    MEV_BUNDLES: '/api/mev/bundles',
-    MEV_CONFIG: '/api/mev/config',
-    
-    // Wallets & Networks
-    WALLETS: '/api/wallets',
-    NETWORKS: '/api/networks',
-    BALANCES: '/api/balances',
-    
-    // Analytics
-    ANALYTICS: '/api/analytics',
-    ARBITRAGE: '/api/arbitrage/opportunities',
-    
-    // Configuration
-    CONFIG: '/api/config',
-    UPDATE_CONFIG: '/api/config/update',
+    MEV_STATUS: '/api/v1/mev/status',
+    MEV_PROTECTION_STATS: '/api/v1/mev/protection-stats',
+    MEV_RELAYS: '/api/v1/mev/relays',
+    MEV_BUNDLES: '/api/v1/mev/bundles',
+    MEV_CONFIG: '/api/v1/mev/config',
+
+    // Authentication
+    AUTH_LOGIN: '/api/v1/auth/login',
+    AUTH_LOGOUT: '/api/v1/auth/logout',
+    AUTH_VERIFY: '/api/v1/auth/verify',
+    AUTH_REFRESH: '/api/v1/auth/refresh',
+    AUTH_REGISTER: '/api/v1/auth/register',
+
+    // WebSocket Info
+    WEBSOCKET_INFO: '/api/v1/websocket/info',
   },
   
   // WebSocket channels for real-time updates

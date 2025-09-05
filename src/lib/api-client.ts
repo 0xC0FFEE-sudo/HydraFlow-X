@@ -22,22 +22,39 @@ import type {
 class APIClient {
   private baseURL: string;
   private timeout: number;
+  private authToken: string | null = null;
 
   constructor() {
     this.baseURL = API_CONFIG.REST_BASE_URL;
     this.timeout = API_CONFIG.REQUEST_TIMEOUT;
+
+    // Initialize token from localStorage if available
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('authToken');
+      if (storedToken) {
+        this.authToken = storedToken;
+      }
+    }
   }
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryCount = 0
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string> || {}),
+    };
+
+    // Add JWT token if available
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
+    }
+
     const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       ...options,
     };
 
@@ -53,117 +70,203 @@ class APIClient {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text().catch(() => 'Unknown error');
+        throw new Error(`API Error ${response.status}: ${response.statusText} - ${errorText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+
+      // Log successful requests in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ API ${options.method || 'GET'} ${endpoint} -> ${response.status}`);
+      }
+
+      return data;
     } catch (error) {
       clearTimeout(timeoutId);
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timeout');
+
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error(`Request timeout after ${this.timeout}ms for ${endpoint}`);
+        }
+
+        // Retry logic for network errors
+        if (retryCount < 2 && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))) {
+          console.warn(`🔄 Retrying ${endpoint} (${retryCount + 1}/3)...`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+          return this.request<T>(endpoint, options, retryCount + 1);
+        }
+
+        // Enhanced error logging
+        console.error(`❌ API Error for ${endpoint}:`, {
+          error: error.message,
+          method: options.method || 'GET',
+          url,
+          retryCount,
+          timestamp: new Date().toISOString()
+        });
       }
+
       throw error;
     }
   }
 
   // System & Health APIs
-  async getSystemMetrics(): Promise<SystemMetrics> {
-    return this.request<SystemMetrics>(API_CONFIG.ENDPOINTS.SYSTEM_METRICS);
+  async getStatus(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.STATUS);
   }
 
-  async getPerformanceMetrics(): Promise<PerformanceMetrics> {
-    return this.request<PerformanceMetrics>(API_CONFIG.ENDPOINTS.PERFORMANCE);
+  async getSystemInfo(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.SYSTEM_INFO);
   }
 
-  async getAlerts(): Promise<any[]> {
-    return this.request<any[]>(API_CONFIG.ENDPOINTS.ALERTS);
+  async getPerformanceMetrics(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.PERFORMANCE);
   }
 
-  async getHealthStatus(): Promise<any[]> {
-    return this.request<any[]>(API_CONFIG.ENDPOINTS.HEALTH);
+  async getHealthStatus(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.HEALTH);
+  }
+
+  async getMetrics(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.METRICS);
   }
 
   // Trading APIs
-  async getPositions(): Promise<Position[]> {
-    return this.request<Position[]>(API_CONFIG.ENDPOINTS.POSITIONS);
+  async getOrders(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.ORDERS);
   }
 
-  async getTrades(limit?: number): Promise<Trade[]> {
-    const params = limit ? `?limit=${limit}` : '';
-    return this.request<Trade[]>(`${API_CONFIG.ENDPOINTS.TRADES}${params}`);
-  }
-
-  async getOrderBook(symbol: string): Promise<OrderBook> {
-    return this.request<OrderBook>(`${API_CONFIG.ENDPOINTS.ORDER_BOOK}/${symbol}`);
-  }
-
-  async placeOrder(order: {
+  async createOrder(order: {
     symbol: string;
     side: 'buy' | 'sell';
     type: 'market' | 'limit';
     quantity: number;
     price?: number;
-  }): Promise<{ orderId: string; status: string }> {
-    return this.request(API_CONFIG.ENDPOINTS.PLACE_ORDER, {
+  }): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.CREATE_ORDER, {
       method: 'POST',
       body: JSON.stringify(order),
     });
   }
 
-  async cancelOrder(orderId: string): Promise<{ success: boolean }> {
-    return this.request(API_CONFIG.ENDPOINTS.CANCEL_ORDER, {
-      method: 'DELETE',
-      body: JSON.stringify({ orderId }),
-    });
+  async getPositions(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.POSITIONS);
   }
 
-  async getStrategies(): Promise<TradingStrategy[]> {
-    return this.request<TradingStrategy[]>(API_CONFIG.ENDPOINTS.STRATEGIES);
+  async getBalances(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.BALANCES);
+  }
+
+  async getTradeHistory(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.TRADE_HISTORY);
+  }
+
+  async getMarketPrices(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.MARKET_PRICES);
   }
 
   // MEV Protection APIs
-  async getMEVStatus(): Promise<MEVProtectionStatus> {
-    return this.request<MEVProtectionStatus>(API_CONFIG.ENDPOINTS.MEV_STATUS);
+  async getMEVStatus(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.MEV_STATUS);
   }
 
-  async getMEVBundles(): Promise<MEVBundle[]> {
-    return this.request<MEVBundle[]>(API_CONFIG.ENDPOINTS.MEV_BUNDLES);
+  async getMEVProtectionStats(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.MEV_PROTECTION_STATS);
   }
 
-  async updateMEVConfig(config: {
-    enabled: boolean;
-    mode: 'aggressive' | 'balanced' | 'conservative';
-    priorityFee: number;
-  }): Promise<{ success: boolean }> {
-    return this.request(API_CONFIG.ENDPOINTS.MEV_CONFIG, {
-      method: 'PUT',
-      body: JSON.stringify(config),
+  async getMEVRelays(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.MEV_RELAYS);
+  }
+
+  // Authentication APIs
+  async login(credentials: { username: string; password: string }): Promise<any> {
+    const response = await this.request<{ token?: string; [key: string]: any }>(API_CONFIG.ENDPOINTS.AUTH_LOGIN, {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+
+    // Store JWT token if login successful
+    if (response.token) {
+      this.setAuthToken(response.token);
+    }
+
+    return response;
+  }
+
+  async logout(): Promise<any> {
+    const response = await this.request(API_CONFIG.ENDPOINTS.AUTH_LOGOUT, {
+      method: 'POST',
+    });
+
+    // Clear JWT token on logout
+    this.clearAuthToken();
+
+    return response;
+  }
+
+  async verifyAuth(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.AUTH_VERIFY);
+  }
+
+  async refreshToken(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.AUTH_REFRESH, {
+      method: 'POST',
     });
   }
 
-  // Wallet & Network APIs
-  async getWallets(): Promise<Wallet[]> {
-    return this.request<Wallet[]>(API_CONFIG.ENDPOINTS.WALLETS);
-  }
-
-  async getNetworks(): Promise<BlockchainNetwork[]> {
-    return this.request<BlockchainNetwork[]>(API_CONFIG.ENDPOINTS.NETWORKS);
-  }
-
-  async getArbitrageOpportunities(): Promise<ArbitrageOpportunity[]> {
-    return this.request<ArbitrageOpportunity[]>(API_CONFIG.ENDPOINTS.ARBITRAGE);
-  }
-
-  // Configuration APIs
-  async getConfig(): Promise<Record<string, any>> {
-    return this.request<Record<string, any>>(API_CONFIG.ENDPOINTS.CONFIG);
-  }
-
-  async updateConfig(config: Record<string, any>): Promise<{ success: boolean }> {
-    return this.request(API_CONFIG.ENDPOINTS.UPDATE_CONFIG, {
-      method: 'PUT',
-      body: JSON.stringify(config),
+  async register(user: { username: string; email: string; password: string }): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.AUTH_REGISTER, {
+      method: 'POST',
+      body: JSON.stringify(user),
     });
+  }
+
+  // Risk Management APIs
+  async getRiskMetrics(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.RISK_METRICS);
+  }
+
+  async getCircuitBreakers(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.CIRCUIT_BREAKERS);
+  }
+
+  async getTradingAllowed(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.TRADING_ALLOWED);
+  }
+
+  // WebSocket Info
+  async getWebSocketInfo(): Promise<any> {
+    return this.request(API_CONFIG.ENDPOINTS.WEBSOCKET_INFO);
+  }
+
+  // JWT Token Management
+  setAuthToken(token: string) {
+    this.authToken = token;
+    // Store in localStorage for persistence
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('authToken', token);
+    }
+  }
+
+  getAuthToken(): string | null {
+    if (this.authToken) return this.authToken;
+    // Try to get from localStorage
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('authToken');
+    }
+    return null;
+  }
+
+  clearAuthToken() {
+    this.authToken = null;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+    }
+  }
+
+  isAuthenticated(): boolean {
+    return this.getAuthToken() !== null;
   }
 }
 
