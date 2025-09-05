@@ -12,7 +12,7 @@
 
 // Core HydraFlow modules
 #include "hfx-core/include/event_engine.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 
 // Network and Strategy modules
 #include "hfx-net/include/network_manager.hpp"
@@ -317,7 +317,7 @@ int main() {
         tester.run_basic_tests();
         return 0;
     } catch (const std::exception& e) {
-        HFX_LOG_ERROR("💥 Test suite crashed: " << e.what() << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
         return 1;
     }
 }

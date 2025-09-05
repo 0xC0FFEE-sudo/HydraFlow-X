@@ -4,7 +4,7 @@
  */
 
 #include "../include/exchange_manager.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <curl/curl.h>
 #include <thread>
 #include <sstream>

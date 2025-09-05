@@ -4,7 +4,7 @@
  */
 
 #include "llm_decision_system.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <algorithm>
 #include <numeric>
 #include <random>

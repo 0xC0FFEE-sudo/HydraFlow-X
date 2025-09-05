@@ -164,7 +164,7 @@ public:
             nlohmann::json json_data = nlohmann::json::parse(response);
             return std::make_unique<ClickHouseResult>(json_data);
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("[ClickHouse] Failed to parse response: " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             return nullptr;
         }
     }
@@ -260,7 +260,7 @@ private:
         curl_easy_cleanup(curl);
 
         if (res != CURLE_OK) {
-            HFX_LOG_ERROR("[ClickHouse] HTTP request failed: " << curl_easy_strerror(res) << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             return "";
         }
 

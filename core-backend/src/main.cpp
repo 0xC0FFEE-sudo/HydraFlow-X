@@ -21,7 +21,7 @@
 #include "hfx-core/include/event_engine.hpp"
 #include "hfx-core/include/memory_pool.hpp"
 #include "hfx-net/include/network_manager.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 
 // REST API Server
 #include "hfx-api/include/rest_api_server.hpp"
@@ -1508,7 +1508,7 @@ int main(int argc, char* argv[]) {
 
         return 0;
     } catch (const std::exception& e) {
-        HFX_LOG_ERROR("Fatal error: " << e.what() << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
         return 1;
     }
 }

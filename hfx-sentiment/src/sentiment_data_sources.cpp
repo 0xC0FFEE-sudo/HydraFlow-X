@@ -4,7 +4,7 @@
  */
 
 #include "../include/sentiment_data_sources.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <iostream>
 
 namespace hfx {
@@ -165,7 +165,7 @@ std::vector<SocialMediaPost> TwitterAPIDataSource::fetch_social_posts(
     std::chrono::system_clock::time_point since) {
     // Placeholder implementation
     HFX_LOG_INFO("[TWITTER API] Fetching tweets for symbols: ";
-    for (const auto& symbol : symbols) HFX_LOG_INFO(symbol << " ";
+    for (const auto& symbol : symbols) HFX_LOG_INFO("[LOG] Message");
     HFX_LOG_INFO(std::endl;
 
     std::vector<SocialMediaPost> posts;
@@ -203,7 +203,7 @@ std::vector<SocialMediaPost> RedditAPIDataSource::fetch_social_posts(
     const std::vector<std::string>& symbols,
     std::chrono::system_clock::time_point since) {
     HFX_LOG_INFO("[REDDIT API] Fetching posts for symbols: ";
-    for (const auto& symbol : symbols) HFX_LOG_INFO(symbol << " ";
+    for (const auto& symbol : symbols) HFX_LOG_INFO("[LOG] Message");
     HFX_LOG_INFO(std::endl;
 
     std::vector<SocialMediaPost> posts;
@@ -237,7 +237,7 @@ std::vector<NewsArticle> RSSFeedDataSource::fetch_news(
     const std::vector<std::string>& symbols,
     std::chrono::system_clock::time_point since) {
     HFX_LOG_INFO("[RSS] Fetching RSS feeds for symbols: ";
-    for (const auto& symbol : symbols) HFX_LOG_INFO(symbol << " ";
+    for (const auto& symbol : symbols) HFX_LOG_INFO("[LOG] Message");
     HFX_LOG_INFO(std::endl;
 
     std::vector<NewsArticle> articles;
@@ -301,7 +301,7 @@ std::vector<NewsArticle> DataSourceManager::fetch_all_news(
             auto articles = source->fetch_news(symbols, since);
             all_articles.insert(all_articles.end(), articles.begin(), articles.end());
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("[DATA MANAGER] Error fetching news from " << source->get_name()
+            HFX_LOG_ERROR("[ERROR] Message");
                       << ": " << e.what() << std::endl;
             stats_.connection_errors.fetch_add(1, std::memory_order_relaxed);
         }
@@ -325,7 +325,7 @@ std::vector<SocialMediaPost> DataSourceManager::fetch_all_social_posts(
             auto posts = source->fetch_social_posts(symbols, since);
             all_posts.insert(all_posts.end(), posts.begin(), posts.end());
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("[DATA MANAGER] Error fetching posts from " << source->get_name()
+            HFX_LOG_ERROR("[ERROR] Message");
                       << ": " << e.what() << std::endl;
             stats_.connection_errors.fetch_add(1, std::memory_order_relaxed);
         }
@@ -343,7 +343,7 @@ void DataSourceManager::start_all_streaming() {
         try {
             source->start_streaming();
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("[DATA MANAGER] Error starting streaming for " << source->get_name()
+            HFX_LOG_ERROR("[ERROR] Message");
                       << ": " << e.what() << std::endl;
         }
     }
@@ -355,7 +355,7 @@ void DataSourceManager::stop_all_streaming() {
         try {
             source->stop_streaming();
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("[DATA MANAGER] Error stopping streaming for " << source->get_name()
+            HFX_LOG_ERROR("[ERROR] Message");
                       << ": " << e.what() << std::endl;
         }
     }

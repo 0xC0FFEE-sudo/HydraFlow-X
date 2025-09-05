@@ -162,7 +162,7 @@ void AlertManager::notify_callbacks(const Alert& alert) {
             callback(alert);
         } catch (const std::exception& e) {
             // Log error but continue with other callbacks
-            HFX_LOG_ERROR("Alert callback error: " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
         }
     }
 }

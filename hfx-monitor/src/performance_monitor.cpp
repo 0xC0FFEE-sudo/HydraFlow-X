@@ -486,7 +486,7 @@ void PerformanceMonitor::notify_alert_callbacks(const PerformanceAlert& alert) {
         try {
             callback(alert);
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("[PERF] Alert callback error: " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
         }
     }
 }

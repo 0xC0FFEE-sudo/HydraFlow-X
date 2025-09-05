@@ -4,7 +4,7 @@
  */
 
 #include "../include/api_key_manager.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <random>
 #include <algorithm>
 #include <openssl/sha.h>

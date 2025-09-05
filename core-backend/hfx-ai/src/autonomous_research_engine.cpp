@@ -65,7 +65,7 @@ struct AutonomousResearchEngine::Impl {
                 deploy_validated_strategies();
                 
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Research cycle error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
             
             auto end_time = std::chrono::high_resolution_clock::now();
@@ -323,7 +323,7 @@ struct AutonomousResearchEngine::Impl {
                 strategy.is_active = true;
                 metrics.strategies_deployed.fetch_add(1);
                 
-                HFX_LOG_INFO("Deployed strategy: " << strategy.name 
+                HFX_LOG_INFO("[LOG] Message");
                          << " (Sharpe: " << strategy.backtested_sharpe << ")" << std::endl;
             }
         }

@@ -4,7 +4,7 @@
  */
 
 #include "websocket_server.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include "mongoose.h"
 #include <iostream>
 #include <sstream>
@@ -451,8 +451,7 @@ WebSocketConnection::ConnectionId WebSocketServer::add_connection() {
         stats_.active_connections = connections_.size();
     }
     
-    HFX_LOG_INFO("[WebSocketServer] Client " + std::to_string(id) + " connected (total: " + std::to_string(connections_.size()) + ")"); 
-              << get_connection_count() << ")" << std::endl;
+    HFX_LOG_INFO("[WebSocketServer] Client " + std::to_string(id) + " connected (total: " + std::to_string(connections_.size()) + ")");
     
     return id;
 }

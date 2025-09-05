@@ -4,7 +4,7 @@
  */
 
 #include "../include/mev_protection_engine.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <curl/curl.h>
 #include <algorithm>
 #include <random>

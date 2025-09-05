@@ -43,7 +43,7 @@ bool ConfigManager::load_config(const std::string& config_file_path) {
             return false;
         }
     } else {
-        HFX_LOG_INFO("Config file not found at " << config_file_path_ << ", using environment variables and defaults." << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
     
     // Validate configuration
@@ -54,7 +54,7 @@ bool ConfigManager::load_config(const std::string& config_file_path) {
     } else {
         HFX_LOG_INFO("Configuration validation failed:");
         for (const auto& error : validation_errors_) {
-            HFX_LOG_INFO("  - " << error << std::endl;
+            HFX_LOG_INFO("[LOG] Message");
         }
     }
     
@@ -73,10 +73,10 @@ bool ConfigManager::save_config(const std::string& config_file_path) {
         std::ofstream file(path);
         file << config_json.dump(4);
         
-        HFX_LOG_INFO("Configuration saved to " << path << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         return true;
     } catch (const std::exception& e) {
-        HFX_LOG_ERROR("Failed to save config: " << e.what() << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
         return false;
     }
 }

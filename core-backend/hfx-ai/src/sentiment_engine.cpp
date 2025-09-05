@@ -338,7 +338,7 @@ void SentimentEngine::shutdown() {
 
 void SentimentEngine::add_data_source(const DataSource& source) {
     pimpl_->data_sources_.push_back(source);
-    HFX_LOG_INFO("[SentimentEngine] Added data source: " << source.name 
+    HFX_LOG_INFO("[LOG] Message");
               << " (weight: " << source.weight << ")" << std::endl;
 }
 
@@ -396,7 +396,7 @@ public:
     }
     
     void feed_worker(const FeedConfig& config) {
-        HFX_LOG_INFO("[DataFeeds] Starting feed: " << config.name << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         
         auto& stats = feed_stats_[config.name];
         stats.is_connected.store(true);
@@ -417,7 +417,7 @@ public:
         }
         
         stats.is_connected.store(false);
-        HFX_LOG_INFO("[DataFeeds] Stopped feed: " << config.name << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
     
 private:
@@ -538,7 +538,7 @@ void DataFeedsManager::shutdown() {
 
 void DataFeedsManager::add_feed(const FeedConfig& config) {
     pimpl_->feeds_.push_back(config);
-    HFX_LOG_INFO("[DataFeeds] Added feed: " << config.name 
+    HFX_LOG_INFO("[LOG] Message");
               << " (" << config.type << ")" << std::endl;
 }
 

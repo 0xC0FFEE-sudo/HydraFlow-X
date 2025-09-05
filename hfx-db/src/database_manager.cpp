@@ -58,7 +58,7 @@ public:
 
             return true;
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("[DatabaseManager] Initialization failed: " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             return false;
         }
     }

@@ -44,7 +44,7 @@ static std::string make_rpc_call(const std::string& url, const std::string& json
     curl_easy_cleanup(curl);
 
     if (res != CURLE_OK) {
-        HFX_LOG_ERROR("[Wallet] RPC call failed: " << curl_easy_strerror(res) << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
         return "";
     }
 
@@ -99,7 +99,7 @@ public:
         // 3. Handle user approval
         // 4. Get wallet address and chain info
 
-        HFX_LOG_INFO("[Wallet] Connecting to " << wallet_info_.name << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
 
         // Simulate connection for demo purposes
         if (wallet_type_ == WalletType::METAMASK || wallet_type_ == WalletType::PHANTOM) {
@@ -121,7 +121,7 @@ public:
                 connection_callback_(true);
             }
 
-            HFX_LOG_INFO("[Wallet] Successfully connected to " << wallet_info_.name
+            HFX_LOG_INFO("[LOG] Message");
                       << " (" << wallet_info_.address << ")" << std::endl;
 
             return true;
@@ -136,7 +136,7 @@ public:
             return true;
         }
 
-        HFX_LOG_INFO("[Wallet] Disconnecting from " << wallet_info_.name << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
 
         wallet_info_.connected = false;
         wallet_info_.balance_native = 0.0;
@@ -146,7 +146,7 @@ public:
             connection_callback_(false);
         }
 
-        HFX_LOG_INFO("[Wallet] Disconnected from " << wallet_info_.name << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         return true;
     }
 
@@ -187,7 +187,7 @@ public:
         // 2. Sign it using the wallet's private key
         // 3. Return the signed transaction
 
-        HFX_LOG_INFO("[Wallet] Signing transaction for " << wallet_info_.name << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
 
         // Simulate transaction signing
         signed_tx.raw_transaction = "0x" + std::string(128, '0') + "..."; // Mock signed transaction
@@ -207,7 +207,7 @@ public:
             return "";
         }
 
-        HFX_LOG_INFO("[Wallet] Sending transaction: " << signed_tx.transaction_hash << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
 
         // In a real implementation, this would broadcast the transaction to the network
         // For now, return the transaction hash
@@ -227,7 +227,7 @@ public:
             return "";
         }
 
-        HFX_LOG_INFO("[Wallet] Signing message: " << message.substr(0, 50) << "..." << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
 
         // Simulate message signing
         return "0x" + std::string(130, '9') + "...";
@@ -244,7 +244,7 @@ public:
             return false;
         }
 
-        HFX_LOG_INFO("[Wallet] Switching to chain ID: " << chain_id << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
 
         // Simulate chain switching
         // In real implementation, this would call wallet_switchEthereumChain
@@ -261,7 +261,7 @@ public:
             return "";
         }
 
-        HFX_LOG_INFO("[Wallet] Approving token " << token_address << " for spender " << spender_address << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
 
         // Create approval transaction
         TransactionRequest request;
@@ -492,7 +492,7 @@ public:
                                double slippage_percent) {
         // This would integrate with the DEXManager to execute swaps
         // For now, simulate a successful swap
-        HFX_LOG_INFO("[WalletManager] Executing DEX swap via " << dex_name << ": "
+        HFX_LOG_INFO("[LOG] Message");
                   << amount_in << " " << token_in << " -> " << token_out << std::endl;
 
         // Get primary wallet

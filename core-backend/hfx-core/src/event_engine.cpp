@@ -5,7 +5,7 @@
 
 #include "event_engine.hpp"
 #include "lockfree_queue.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -63,7 +63,7 @@ bool EventEngine::initialize() {
     // Set running flag
     running_.store(true, std::memory_order_release);
 
-    HFX_LOG_INFO("[EventEngine] Initialized successfully\n";
+    HFX_LOG_INFO("[EventEngine] Initialized successfully\n");
     return true;
 }
 
@@ -92,7 +92,7 @@ void EventEngine::shutdown() {
     }
 #endif
 
-    HFX_LOG_INFO("[EventEngine] Shutdown complete. Processed " 
+    HFX_LOG_INFO("[LOG] Message");
               << event_count_.load() << " events total.\n";
 }
 
@@ -168,13 +168,13 @@ bool EventEngine::initialize_platform() {
     // Initialize kqueue for high-performance event handling
     kqueue_fd_ = kqueue();
     if (kqueue_fd_ < 0) {
-        HFX_LOG_ERROR("[EventEngine] Failed to create kqueue\n";
+        HFX_LOG_ERROR("[EventEngine] Failed to create kqueue\n");
         return false;
     }
 
     // Get timebase info for timestamp conversion
     if (mach_timebase_info(&timebase_info_) != KERN_SUCCESS) {
-        HFX_LOG_ERROR("[EventEngine] Failed to get mach timebase info\n";
+        HFX_LOG_ERROR("[EventEngine] Failed to get mach timebase info\n");
         return false;
     }
 
@@ -182,15 +182,15 @@ bool EventEngine::initialize_platform() {
     struct sched_param param;
     param.sched_priority = sched_get_priority_max(SCHED_FIFO);
     if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &param) != 0) {
-        HFX_LOG_INFO("[EventEngine] Warning: Could not set high priority\n";
+        HFX_LOG_INFO("[EventEngine] Warning: Could not set high priority\n");
     }
 
     // Set thread QoS for Apple platforms
     if (pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0) != 0) {
-        HFX_LOG_INFO("[EventEngine] Warning: Could not set QoS class\n";
+        HFX_LOG_INFO("[EventEngine] Warning: Could not set QoS class\n");
     }
 
-    HFX_LOG_INFO("[EventEngine] Apple-specific optimizations enabled\n";
+    HFX_LOG_INFO("[EventEngine] Apple-specific optimizations enabled\n");
 #endif
 
     return true;
@@ -216,8 +216,8 @@ void EventEngine::process_single_event(const Event& event) {
             
             default:
                 // Unknown event type - log but continue
-                HFX_LOG_ERROR("[EventEngine] Unknown event type: " 
-                          << static_cast<int>(event.type) << "\n";
+                HFX_LOG_ERROR("[ERROR] Message");
+                           << static_cast<int>(event.type) << "\n";
                 break;
         }
     }

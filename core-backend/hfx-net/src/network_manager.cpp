@@ -65,7 +65,7 @@ void NetworkManager::shutdown() {
 
 ConnectionId NetworkManager::create_connection(const ConnectionConfig& config) {
     const auto connection_id = next_connection_id_.fetch_add(1, std::memory_order_relaxed);
-    HFX_LOG_INFO("[NetworkManager] Created connection " << connection_id 
+    HFX_LOG_INFO("[LOG] Message");
               << " to " << config.endpoint << "\n";
     return connection_id;
 }
@@ -74,7 +74,7 @@ bool NetworkManager::close_connection(ConnectionId connection_id) {
     auto it = connections_.find(connection_id);
     if (it != connections_.end()) {
         connections_.erase(it);
-        HFX_LOG_INFO("[NetworkManager] Closed connection " << connection_id << "\n";
+        HFX_LOG_INFO("[LOG] Message");
         return true;
     }
     return false;

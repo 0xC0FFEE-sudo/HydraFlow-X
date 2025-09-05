@@ -304,7 +304,7 @@ void SecurityMiddleware::Impl::add_security_headers(SecurityMiddlewareResult& re
 
 void SecurityMiddleware::Impl::log_security_event(const std::string& event_type, const std::string& details) {
     if (config_.enable_request_logging) {
-        HFX_LOG_INFO("[SECURITY] " << event_type << ": " << details << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
 }
 

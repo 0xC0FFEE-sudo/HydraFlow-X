@@ -15,7 +15,7 @@
 // Core HydraFlow modules
 #include "event_engine.hpp"
 #include "memory_pool.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 
 // AI Trading components
 #ifdef HFX_ENABLE_AI

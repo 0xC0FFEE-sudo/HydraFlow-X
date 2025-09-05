@@ -1,5 +1,5 @@
 #include "jito_mev_engine.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <thread>
 #include <chrono>
 #include <random>

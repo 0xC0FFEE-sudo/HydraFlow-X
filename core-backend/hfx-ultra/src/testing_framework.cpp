@@ -517,13 +517,13 @@ void TestRunner::RegisterTestSuite(std::shared_ptr<TestSuite> suite) {
 
 void TestRunner::DiscoverTests(const std::string& directory_path) {
     // Simplified test discovery - in real implementation would scan for test files
-    HFX_LOG_INFO("🔍 Discovering tests in: " << directory_path << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     
     if (std::filesystem::exists(directory_path)) {
         for (const auto& entry : std::filesystem::recursive_directory_iterator(directory_path)) {
             if (entry.path().filename().string().find("test") != std::string::npos &&
                 entry.path().extension() == ".cpp") {
-                HFX_LOG_INFO("   Found test file: " << entry.path() << std::endl;
+                HFX_LOG_INFO("[LOG] Message");
             }
         }
     }
@@ -548,10 +548,10 @@ void TestRunner::SetPriorityFilter(TestPriority min_priority) {
 void TestRunner::RunAllTests() {
     HFX_LOG_INFO("🚀 Starting test execution...");
     HFX_LOG_INFO("   Configuration:");
-    HFX_LOG_INFO("   - Parallel execution: " << (parallel_execution_ ? "Enabled" : "Disabled") << std::endl;
-    HFX_LOG_INFO("   - Max threads: " << max_threads_ << std::endl;
-    HFX_LOG_INFO("   - Output format: " << output_format_ << std::endl;
-    HFX_LOG_INFO("   - Random seed: " << random_seed_ << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
+    HFX_LOG_INFO("[LOG] Message");
+    HFX_LOG_INFO("[LOG] Message");
+    HFX_LOG_INFO("[LOG] Message");
     
     all_results_.clear();
     
@@ -560,7 +560,7 @@ void TestRunner::RunAllTests() {
             suite_start_callback_(suite->GetName());
         }
         
-        HFX_LOG_INFO("\n📋 Running test suite: " << suite->GetName() << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         
         auto suite_results = suite->RunAllTests();
         all_results_.insert(all_results_.end(), suite_results.begin(), suite_results.end());
@@ -580,7 +580,7 @@ void TestRunner::RunAllTests() {
             }
         }
         
-        HFX_LOG_INFO("   Suite results: " << passed << " passed, " 
+        HFX_LOG_INFO("[LOG] Message");
                   << failed << " failed, " << errors << " errors" << std::endl;
     }
     
@@ -590,7 +590,7 @@ void TestRunner::RunAllTests() {
 void TestRunner::RunFilteredTests() {
     auto filtered_tests = GetFilteredTests();
     
-    HFX_LOG_INFO("🔍 Running " << filtered_tests.size() << " filtered tests..." << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     
     if (parallel_execution_ && filtered_tests.size() > 1) {
         ExecuteTestsParallel(filtered_tests);
@@ -608,12 +608,12 @@ void TestRunner::RunSuite(const std::string& suite_name) {
                           });
     
     if (it != test_suites_.end()) {
-        HFX_LOG_INFO("🎯 Running specific suite: " << suite_name << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         auto results = (*it)->RunAllTests();
         all_results_.insert(all_results_.end(), results.begin(), results.end());
         GenerateReport();
     } else {
-        HFX_LOG_ERROR("❌ Suite not found: " << suite_name << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
     }
 }
 
@@ -675,7 +675,7 @@ std::vector<std::shared_ptr<TestCase>> TestRunner::GetFilteredTests() const {
 }
 
 void TestRunner::ExecuteTestsParallel(const std::vector<std::shared_ptr<TestCase>>& tests) {
-    HFX_LOG_INFO("⚡ Executing tests in parallel with " << max_threads_ << " threads" << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     
     std::vector<std::future<TestResult>> futures;
     
@@ -696,7 +696,7 @@ void TestRunner::ExecuteTestsParallel(const std::vector<std::shared_ptr<TestCase
             }
             
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("❌ Error executing test: " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
         }
     }
 }
@@ -744,7 +744,7 @@ void TestRunner::GeneratePerformanceReport() {
     
     std::ofstream file(filename);
     if (!file.is_open()) {
-        HFX_LOG_ERROR("❌ Failed to open performance report file: " << filename << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
         return;
     }
     
@@ -805,36 +805,36 @@ void TestRunner::GeneratePerformanceReport() {
     file << "}\n";
     
     file.close();
-    HFX_LOG_INFO("📊 Performance report written to: " << filename << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void TestRunner::WriteConsoleReport() const {
     auto stats = GetStatistics();
     
-    HFX_LOG_INFO("\n" << std::string(60, '=') << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     HFX_LOG_INFO("🎯 TEST EXECUTION SUMMARY");
-    HFX_LOG_INFO(std::string(60, '=') << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     
-    HFX_LOG_INFO("Total Tests:     " << stats.total_tests << std::endl;
-    HFX_LOG_INFO("✅ Passed:       " << stats.passed_tests << std::endl;
-    HFX_LOG_INFO("❌ Failed:       " << stats.failed_tests << std::endl;
-    HFX_LOG_INFO("⚠️  Errors:       " << stats.error_tests << std::endl;
-    HFX_LOG_INFO("⏭️  Skipped:      " << stats.skipped_tests << std::endl;
-    HFX_LOG_INFO("Success Rate:    " << std::fixed << std::setprecision(2) 
+    HFX_LOG_INFO("[LOG] Message");
+    HFX_LOG_INFO("[LOG] Message");
+    HFX_LOG_INFO("[LOG] Message");
+    HFX_LOG_INFO("[LOG] Message");
+    HFX_LOG_INFO("[LOG] Message");
+    HFX_LOG_INFO("[LOG] Message");
               << stats.success_rate << "%" << std::endl;
-    HFX_LOG_INFO("Total Time:      " << stats.total_execution_time.count() << "ms" << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     
     if (stats.avg_latency_ns > 0) {
         HFX_LOG_INFO("\n⚡ PERFORMANCE METRICS");
-        HFX_LOG_INFO("Avg Latency:     " << std::fixed << std::setprecision(0) 
+        HFX_LOG_INFO("[LOG] Message");
                   << stats.avg_latency_ns << "ns" << std::endl;
-        HFX_LOG_INFO("Max Latency:     " << std::fixed << std::setprecision(0) 
+        HFX_LOG_INFO("[LOG] Message");
                   << stats.max_latency_ns << "ns" << std::endl;
         
         if (stats.avg_memory_usage_mb > 0) {
-            HFX_LOG_INFO("Avg Memory:      " << std::fixed << std::setprecision(2) 
+            HFX_LOG_INFO("[LOG] Message");
                       << stats.avg_memory_usage_mb << "MB" << std::endl;
-            HFX_LOG_INFO("Max Memory:      " << std::fixed << std::setprecision(2) 
+            HFX_LOG_INFO("[LOG] Message");
                       << stats.max_memory_usage_mb << "MB" << std::endl;
         }
     }
@@ -842,21 +842,21 @@ void TestRunner::WriteConsoleReport() const {
     // Show failed tests
     if (stats.failed_tests > 0 || stats.error_tests > 0) {
         HFX_LOG_INFO("\n❌ FAILED TESTS");
-        HFX_LOG_INFO(std::string(40, '-') << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         
         for (const auto& result : all_results_) {
             if (result.status == TestStatus::FAILED || result.status == TestStatus::ERROR) {
-                HFX_LOG_INFO("Test: " << result.suite_name << "::" << result.test_name << std::endl;
-                HFX_LOG_INFO("Error: " << result.error_message << std::endl;
+                HFX_LOG_INFO("[LOG] Message");
+                HFX_LOG_INFO("[LOG] Message");
                 if (!result.failure_details.empty()) {
-                    HFX_LOG_INFO("Details: " << result.failure_details << std::endl;
+                    HFX_LOG_INFO("[LOG] Message");
                 }
-                HFX_LOG_INFO(std::endl;
+                HFX_LOG_INFO("[LOG] Message");
             }
         }
     }
     
-    HFX_LOG_INFO(std::string(60, '=') << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     
     if (stats.failed_tests == 0 && stats.error_tests == 0) {
         HFX_LOG_INFO("🎉 ALL TESTS PASSED! 🎉");
@@ -864,7 +864,7 @@ void TestRunner::WriteConsoleReport() const {
         HFX_LOG_INFO("❌ SOME TESTS FAILED");
     }
     
-    HFX_LOG_INFO(std::string(60, '=') << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void TestRunner::WriteXmlReport() const {
@@ -872,7 +872,7 @@ void TestRunner::WriteXmlReport() const {
     std::ofstream file(filename);
     
     if (!file.is_open()) {
-        HFX_LOG_ERROR("❌ Failed to open output file: " << filename << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
         return;
     }
     
@@ -920,7 +920,7 @@ void TestRunner::WriteXmlReport() const {
     file << "</testsuites>\n";
     file.close();
     
-    HFX_LOG_INFO("📄 XML report written to: " << filename << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void TestRunner::WriteJsonReport() const {
@@ -928,7 +928,7 @@ void TestRunner::WriteJsonReport() const {
     std::ofstream file(filename);
     
     if (!file.is_open()) {
-        HFX_LOG_ERROR("❌ Failed to open output file: " << filename << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
         return;
     }
     
@@ -980,7 +980,7 @@ void TestRunner::WriteJsonReport() const {
     
     file.close();
     
-    HFX_LOG_INFO("📄 JSON report written to: " << filename << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 bool TestRunner::MatchesFilter(const TestCase& test) const {

@@ -189,12 +189,12 @@ public:
             try {
                 callback(alert_type, message);
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Alert callback error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
         }
         
         // Also log to console
-        HFX_LOG_INFO("🚨 ALERT [" << alert_type << "]: " << message << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
     
     void emergency_stop_all_trading() {
@@ -412,7 +412,7 @@ private:
                     std::chrono::system_clock::now().time_since_epoch()).count());
             
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("❌ Trade execution error: " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             result.success = false;
             result.error_message = e.what();
             metrics_.failed_trades.fetch_add(1);
@@ -587,7 +587,7 @@ private:
             try {
                 callback(signal);
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Signal callback error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
         }
     }
@@ -598,7 +598,7 @@ private:
             try {
                 callback(result);
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Execution callback error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
         }
     }

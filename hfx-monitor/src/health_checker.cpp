@@ -408,7 +408,7 @@ HealthStatus HealthChecker::calculate_overall_health() const {
 
 void HealthChecker::handle_health_check_failure(const std::string& name, const HealthCheckResult& result) {
     // Log failure
-    HFX_LOG_INFO("[HEALTH] FAILURE: " << format_health_check_result(result) << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 
     stats_.last_failure = result.timestamp;
 
@@ -417,7 +417,7 @@ void HealthChecker::handle_health_check_failure(const std::string& name, const H
 
 void HealthChecker::handle_health_check_recovery(const std::string& name, const HealthCheckResult& result) {
     // Log recovery
-    HFX_LOG_INFO("[HEALTH] RECOVERY: " << format_health_check_result(result) << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 
     stats_.recovery_events.fetch_add(1, std::memory_order_relaxed);
 }
@@ -429,7 +429,7 @@ void HealthChecker::notify_alert_callbacks(const HealthCheckResult& result) {
         try {
             callback(result);
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("[HEALTH] Alert callback error: " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
         }
     }
 }

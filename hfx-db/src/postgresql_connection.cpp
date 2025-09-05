@@ -125,7 +125,7 @@ public:
 
         conn_ = PQconnectdb(conn_str.str().c_str());
         if (PQstatus(conn_) != CONNECTION_OK) {
-            HFX_LOG_ERROR("[PostgreSQL] Connection failed: " << PQerrorMessage(conn_) << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             disconnect();
             return false;
         }
@@ -162,13 +162,13 @@ public:
 
         PGresult* result = PQexec(conn_, query.c_str());
         if (!result) {
-            HFX_LOG_ERROR("[PostgreSQL] Query execution failed: " << PQerrorMessage(conn_) << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             return nullptr;
         }
 
         ExecStatusType status = PQresultStatus(result);
         if (status != PGRES_TUPLES_OK && status != PGRES_COMMAND_OK) {
-            HFX_LOG_ERROR("[PostgreSQL] Query failed: " << PQerrorMessage(conn_) << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             PQclear(result);
             return nullptr;
         }
@@ -182,7 +182,7 @@ public:
 
         PGresult* result = PQexec(conn_, command.c_str());
         if (!result) {
-            HFX_LOG_ERROR("[PostgreSQL] Command execution failed: " << PQerrorMessage(conn_) << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             return false;
         }
 
@@ -190,7 +190,7 @@ public:
         PQclear(result);
 
         if (status != PGRES_COMMAND_OK) {
-            HFX_LOG_ERROR("[PostgreSQL] Command failed: " << PQerrorMessage(conn_) << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             return false;
         }
 
@@ -248,7 +248,7 @@ public:
 
         PGresult* result = PQprepare(conn_, name.c_str(), query.c_str(), 0, nullptr);
         if (!result) {
-            HFX_LOG_ERROR("[PostgreSQL] Prepare statement failed: " << PQerrorMessage(conn_) << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             return false;
         }
 
@@ -276,13 +276,13 @@ public:
                                         nullptr, nullptr, 0);
 
         if (!result) {
-            HFX_LOG_ERROR("[PostgreSQL] Execute prepared failed: " << PQerrorMessage(conn_) << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             return nullptr;
         }
 
         ExecStatusType status = PQresultStatus(result);
         if (status != PGRES_TUPLES_OK && status != PGRES_COMMAND_OK) {
-            HFX_LOG_ERROR("[PostgreSQL] Execute prepared failed: " << PQerrorMessage(conn_) << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             PQclear(result);
             return nullptr;
         }

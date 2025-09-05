@@ -1,5 +1,5 @@
 #include "v3_tick_engine.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <thread>
 #include <algorithm>
 #include <cmath>
@@ -29,7 +29,7 @@ V3TickEngine::V3TickEngine(const V3EngineConfig& config)
     // Initialize random generator for simulation
     random_generator_.seed(std::chrono::steady_clock::now().time_since_epoch().count());
     
-    HFX_LOG_INFO("🦄 V3 Tick Engine initialized with support for " 
+    HFX_LOG_INFO("[LOG] Message");
               << fee_tiers_.size() << " fee tiers" << std::endl;
     
     // Pre-load some common pool configurations
@@ -292,7 +292,7 @@ void V3TickEngine::initializeCommonPools() {
         pool_states_[usdc_usdt_pool.pool_address] = usdc_usdt_pool;
     }
     
-    HFX_LOG_INFO("📊 Initialized " << pool_states_.size() << " common V3 pools" << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 uint160_t V3TickEngine::calculateSqrtPriceX96(double price) const {

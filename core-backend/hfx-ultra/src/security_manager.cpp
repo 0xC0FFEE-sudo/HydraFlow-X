@@ -226,10 +226,10 @@ bool PermissionManager::can_access_resource(const std::string& user_id, const st
 SecurityManager::SecurityManager(const SecurityConfig& config) 
     : config_(config) {
     HFX_LOG_INFO("🔒 Initializing Security Manager...");
-    HFX_LOG_INFO("   Session timeout: " << config_.session_timeout.count() << " minutes" << std::endl;
-    HFX_LOG_INFO("   Rate limiting: " << (config_.enable_rate_limiting ? "Enabled" : "Disabled") << std::endl;
-    HFX_LOG_INFO("   Audit logging: " << (config_.enable_audit_logging ? "Enabled" : "Disabled") << std::endl;
-    HFX_LOG_INFO("   IP filtering: " << (config_.enable_ip_whitelist ? "Enabled" : "Disabled") << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
+    HFX_LOG_INFO("[LOG] Message");
+    HFX_LOG_INFO("[LOG] Message");
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 SecurityManager::~SecurityManager() {
@@ -366,7 +366,7 @@ std::string SecurityManager::create_session(const std::string& user_id, const st
     log_audit_event(AuditEventType::LOGIN_SUCCESS, user_id, "session", "create", 
                    true, "Session created with " + security_utils::auth_method_to_string(auth_method));
     
-    HFX_LOG_INFO("🔑 Session created: " << security_utils::format_session_info(session) << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     
     return session_id;
 }
@@ -442,7 +442,7 @@ bool SecurityManager::terminate_session(const std::string& session_id) {
     log_audit_event(AuditEventType::LOGOUT, session.user_id, "session", "terminate", 
                    true, "Session terminated");
     
-    HFX_LOG_INFO("🔒 Session terminated: " << session_id.substr(0, 8) << "..." << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     
     return true;
 }
@@ -477,7 +477,7 @@ std::string SecurityManager::create_api_key(const std::string& user_id, const st
     log_audit_event(AuditEventType::KEY_GENERATION, user_id, "api_key", "create", 
                    true, "API key created: " + description);
     
-    HFX_LOG_INFO("🔑 API key created for user: " << user_id 
+    HFX_LOG_INFO("[LOG] Message");
               << " (" << description << ")" << std::endl;
     
     return api_key;
@@ -639,7 +639,7 @@ bool SecurityManager::validate_input(const std::string& input, const std::string
         std::regex regex_pattern(pattern);
         return std::regex_match(input, regex_pattern);
     } catch (const std::exception& e) {
-        HFX_LOG_ERROR("❌ Invalid regex pattern: " << pattern << " - " << e.what() << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
         return false;
     }
 }
@@ -918,7 +918,7 @@ void SecurityManager::trigger_security_lockdown(const std::string& reason) {
     log_audit_event(AuditEventType::SECURITY_VIOLATION, "SYSTEM", "security", "lockdown", 
                    true, "Security lockdown triggered: " + reason, ViolationSeverity::EMERGENCY);
     
-    HFX_LOG_INFO("🚨 SECURITY LOCKDOWN TRIGGERED: " << reason << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void SecurityManager::emergency_revoke_all_sessions() {
@@ -938,7 +938,7 @@ void SecurityManager::emergency_revoke_all_sessions() {
                    true, "Revoked " + std::to_string(revoked_count) + " sessions", 
                    ViolationSeverity::EMERGENCY);
     
-    HFX_LOG_INFO("🚨 Emergency: Revoked " << revoked_count << " active sessions" << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 // Worker thread implementations
@@ -1055,7 +1055,7 @@ void SecurityManager::cleanup_expired_sessions() {
     }
     
     if (cleaned_count > 0) {
-        HFX_LOG_INFO("🧹 Cleaned up " << cleaned_count << " expired sessions" << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
 }
 
@@ -1119,7 +1119,7 @@ void SecurityManager::write_audit_log_to_file(const AuditLogEntry& entry) {
             log_file.close();
         }
     } catch (const std::exception& e) {
-        HFX_LOG_ERROR("❌ Failed to write audit log: " << e.what() << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
     }
 }
 
@@ -1185,7 +1185,7 @@ void SecurityManager::check_failed_login_attempts() {
     
     for (const auto& [user_id, count] : failed_attempts) {
         if (count >= config_.failed_login_threshold) {
-            HFX_LOG_INFO("⚠️  User " << user_id << " has " << count 
+            HFX_LOG_INFO("[LOG] Message");
                       << " failed login attempts in the last " 
                       << config_.failed_login_window.count() << " minutes" << std::endl;
         }

@@ -4,7 +4,7 @@
  */
 
 #include "../include/production_database_manager.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <sstream>
 #include <iomanip>
 #include <algorithm>

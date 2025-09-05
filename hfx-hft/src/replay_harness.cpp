@@ -128,17 +128,17 @@ bool ReplayEngine::is_initialized() const {
 }
 
 bool ReplayEngine::load_market_data(const std::vector<std::string>& file_paths) {
-    HFX_LOG_INFO("[ReplayEngine] Loading market data from " << file_paths.size() << " files" << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
 bool ReplayEngine::load_signal_data(const std::vector<std::string>& file_paths) {
-    HFX_LOG_INFO("[ReplayEngine] Loading signal data from " << file_paths.size() << " files" << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
 bool ReplayEngine::load_trade_data(const std::vector<std::string>& file_paths) {
-    HFX_LOG_INFO("[ReplayEngine] Loading trade data from " << file_paths.size() << " files" << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
@@ -159,15 +159,15 @@ void ReplayEngine::stop_replay() {
 }
 
 void ReplayEngine::step_forward(size_t events) {
-    HFX_LOG_INFO("[ReplayEngine] Stepping forward " << events << " events" << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void ReplayEngine::seek_to_timestamp(uint64_t timestamp_ns) {
-    HFX_LOG_INFO("[ReplayEngine] Seeking to timestamp " << timestamp_ns << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void ReplayEngine::seek_to_percentage(double percentage) {
-    HFX_LOG_INFO("[ReplayEngine] Seeking to " << percentage << "%" << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void ReplayEngine::reset_to_beginning() {
@@ -243,12 +243,12 @@ ReplayEngine::ReplayMetrics ReplayEngine::get_replay_metrics() const {
 }
 
 bool ReplayEngine::generate_audit_trail(const std::string& output_path) {
-    HFX_LOG_INFO("[ReplayEngine] Generating audit trail to " << output_path << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
 bool ReplayEngine::export_compliance_report(const std::string& output_path) {
-    HFX_LOG_INFO("[ReplayEngine] Exporting compliance report to " << output_path << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 

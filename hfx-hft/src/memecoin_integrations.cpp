@@ -238,7 +238,7 @@ public:
                 watched_tokens_.push_back(token);
             }
             
-            HFX_LOG_INFO("[AxiomPro] New token discovered: " << token.symbol 
+            HFX_LOG_INFO("[LOG] Message");
                       << " @ " << token.contract_address << std::endl;
         }
     }
@@ -281,7 +281,7 @@ public:
         result.sandwich_detected = false;
         result.mev_loss_percent = 0.0;
         
-        HFX_LOG_INFO("[AxiomPro] Trade executed in " << result.execution_latency_ns / 1000 
+        HFX_LOG_INFO("[LOG] Message");
                   << "μs - Hash: " << result.transaction_hash << std::endl;
         
         return result;
@@ -310,7 +310,7 @@ void AxiomProIntegration::subscribe_to_new_tokens() {
 }
 
 void AxiomProIntegration::subscribe_to_price_updates(const std::string& token_address) {
-    HFX_LOG_INFO("[AxiomPro] Subscribed to price updates for " << token_address << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 MemecoinMarketData AxiomProIntegration::get_market_data(const std::string& token_address) {
@@ -336,7 +336,7 @@ MemecoinTradeResult AxiomProIntegration::execute_trade(const MemecoinTradeParams
 }
 
 bool AxiomProIntegration::cancel_pending_orders(const std::string& token_address) {
-    HFX_LOG_INFO("[AxiomPro] Cancelled pending orders for " << token_address << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
@@ -382,7 +382,7 @@ public:
         }
         
         connected_.store(true);
-        HFX_LOG_INFO("[PhotonSol] Connected to Solana RPC: " << rpc_endpoint_ << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         return true;
     }
     
@@ -423,7 +423,7 @@ public:
             result.sandwich_detected = (std::rand() % 20 == 0);
         }
         
-        HFX_LOG_INFO("[PhotonSol] Solana trade executed in " << result.execution_latency_ns / 1000 
+        HFX_LOG_INFO("[LOG] Message");
                   << "μs - Hash: " << result.transaction_hash << std::endl;
         
         return result;
@@ -463,7 +463,7 @@ void PhotonSolIntegration::subscribe_to_new_tokens() {
 }
 
 void PhotonSolIntegration::subscribe_to_price_updates(const std::string& token_address) {
-    HFX_LOG_INFO("[PhotonSol] Subscribed to Solana price updates for " << token_address << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 MemecoinMarketData PhotonSolIntegration::get_market_data(const std::string& token_address) {
@@ -490,7 +490,7 @@ MemecoinTradeResult PhotonSolIntegration::execute_trade(const MemecoinTradeParam
 }
 
 bool PhotonSolIntegration::cancel_pending_orders(const std::string& token_address) {
-    HFX_LOG_INFO("[PhotonSol] Cancelled Solana orders for " << token_address << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
@@ -515,7 +515,7 @@ std::unordered_map<std::string, std::string> PhotonSolIntegration::get_platform_
 }
 
 void PhotonSolIntegration::set_jito_bundle_settings(double tip_lamports, bool use_priority_fees) {
-    HFX_LOG_INFO("[PhotonSol] Jito bundle settings: tip=" << tip_lamports 
+    HFX_LOG_INFO("[LOG] Message");
               << " lamports, priority_fees=" << use_priority_fees << std::endl;
 }
 
@@ -581,7 +581,7 @@ public:
         result.sandwich_detected = (std::rand() % 200 == 0);
         result.mev_loss_percent = 0.05 + (std::rand() % 3) / 10.0;
         
-        HFX_LOG_INFO("[BullX] Trade executed in " << result.execution_latency_ns / 1000 
+        HFX_LOG_INFO("[LOG] Message");
                   << "μs - Hash: " << result.transaction_hash << std::endl;
         
         return result;
@@ -610,7 +610,7 @@ void BullXIntegration::subscribe_to_new_tokens() {
 }
 
 void BullXIntegration::subscribe_to_price_updates(const std::string& token_address) {
-    HFX_LOG_INFO("[BullX] Subscribed to price updates for " << token_address << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 MemecoinMarketData BullXIntegration::get_market_data(const std::string& token_address) {
@@ -636,7 +636,7 @@ MemecoinTradeResult BullXIntegration::execute_trade(const MemecoinTradeParams& p
 }
 
 bool BullXIntegration::cancel_pending_orders(const std::string& token_address) {
-    HFX_LOG_INFO("[BullX] Cancelled orders for " << token_address << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 

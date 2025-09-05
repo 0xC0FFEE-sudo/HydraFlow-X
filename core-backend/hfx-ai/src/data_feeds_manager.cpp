@@ -84,7 +84,7 @@ private:
                     std::this_thread::sleep_for(std::chrono::seconds(2));
                 }
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("❌ Twitter feed error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(30));
@@ -102,7 +102,7 @@ private:
                     data_callback_("dexscreener", "trending", trending_data, timestamp);
                 }
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("❌ DexScreener feed error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(15));
@@ -120,7 +120,7 @@ private:
                     data_callback_("gmgn", "smart_money", smart_money_data, timestamp);
                 }
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("❌ GMGN feed error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(20));
@@ -138,7 +138,7 @@ private:
                     data_callback_("reddit", "crypto_discussions", reddit_data, timestamp);
                 }
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("❌ Reddit feed error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(45));
@@ -148,7 +148,7 @@ private:
     std::string fetch_twitter_mentions(const std::string& keyword) {
         // Mock Twitter API implementation
         // In production, this would use Twitter API v2 with bearer token
-        HFX_LOG_INFO("🐦 Fetching Twitter mentions for: " << keyword << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         
         // Simulate API response with realistic data
         return R"({

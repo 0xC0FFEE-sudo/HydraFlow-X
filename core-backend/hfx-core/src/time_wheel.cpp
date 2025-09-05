@@ -4,6 +4,7 @@
  */
 
 #include "time_wheel.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <iostream>
 #include <chrono>
 
@@ -36,7 +37,7 @@ TimeWheel::~TimeWheel() = default;
 
 bool TimeWheel::initialize() {
     initialize_wheels();
-    HFX_LOG_INFO("[TimeWheel] Initialized with " << base_tick_duration_.count() 
+    HFX_LOG_INFO("[LOG] Message");
               << "ns base tick\n";
     return true;
 }

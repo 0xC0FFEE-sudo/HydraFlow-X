@@ -118,8 +118,8 @@ position sizes, and detailed reasoning for each recommendation.
         reset_statistics();
         
         HFX_LOG_INFO("✅ LLM Decision System initialized");
-        HFX_LOG_INFO("   Model: " << model_name_ << std::endl;
-        HFX_LOG_INFO("   Strategies: " << strategies_.size() << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
         
         return true;
     }
@@ -570,7 +570,7 @@ private:
                 process_queued_inputs();
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Decision processor error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
         }
     }
@@ -665,7 +665,7 @@ private:
                 monitor_market_conditions();
                 std::this_thread::sleep_for(std::chrono::seconds(5));
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Market monitor error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
         }
     }
@@ -687,7 +687,7 @@ private:
             try {
                 callback(decision);
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Decision callback error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
         }
     }
@@ -758,7 +758,7 @@ void LLMDecisionSystem::emergency_stop() {
 
 void LLMDecisionSystem::pause_trading(bool paused) {
     pimpl_->trading_paused_.store(paused);
-    HFX_LOG_INFO((paused ? "⏸️  " : "▶️  ") << "LLM Trading " << (paused ? "paused" : "resumed") << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 } // namespace hfx::ai

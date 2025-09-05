@@ -1,5 +1,5 @@
 #include "smart_trading_engine.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <algorithm>
 #include <iostream>
 #include <sstream>

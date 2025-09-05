@@ -448,7 +448,7 @@ void BacktestEngine::validate_data_availability(const BacktestConfig& config) {
 
     for (const std::string& symbol : config.symbols) {
         if (!data_source_->symbol_exists(symbol)) {
-            HFX_LOG_ERROR("Warning: Symbol " << symbol << " not found in data source" << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
         }
     }
 }

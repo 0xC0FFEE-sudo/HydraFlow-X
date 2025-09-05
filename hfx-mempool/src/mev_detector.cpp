@@ -621,7 +621,7 @@ void MEVDetector::notify_mev_callbacks(const MEVOpportunity& opportunity) {
         try {
             callback(opportunity);
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("MEV callback error: " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
         }
     }
 }
@@ -1076,7 +1076,7 @@ bool MEVProtectionManager::create_jito_bundle(const std::vector<Transaction>& tr
     bundle_id = "jito_bundle_" + std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
 
     // Simulate bundle creation (in real implementation, this would interact with Jito API)
-    HFX_LOG_INFO("[MEV Protection] Created Jito bundle with " << transactions.size()
+    HFX_LOG_INFO("[LOG] Message");
               << " transactions, tip: " << tip_amount << " lamports" << std::endl;
 
     return true;
@@ -1088,7 +1088,7 @@ bool MEVProtectionManager::submit_jito_bundle(const std::string& bundle_id) {
     }
 
     // Simulate bundle submission
-    HFX_LOG_INFO("[MEV Protection] Submitted Jito bundle: " << bundle_id << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
@@ -1119,25 +1119,25 @@ bool MEVProtectionManager::is_protection_active() const {
 // Private relay submission implementations
 bool MEVProtectionManager::submit_to_flashbots(const PrivateTransaction& tx) {
     // Simulate Flashbots submission
-    HFX_LOG_INFO("[MEV Protection] Submitting to Flashbots: " << tx.tx_hash << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
 bool MEVProtectionManager::submit_to_eden(const PrivateTransaction& tx) {
     // Simulate Eden Network submission
-    HFX_LOG_INFO("[MEV Protection] Submitting to Eden Network: " << tx.tx_hash << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
 bool MEVProtectionManager::submit_to_bloxroute(const PrivateTransaction& tx) {
     // Simulate Bloxroute submission
-    HFX_LOG_INFO("[MEV Protection] Submitting to Bloxroute: " << tx.tx_hash << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
 bool MEVProtectionManager::submit_to_jito(const PrivateTransaction& tx) {
     // Simulate Jito submission
-    HFX_LOG_INFO("[MEV Protection] Submitting to Jito: " << tx.tx_hash << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
@@ -1259,7 +1259,7 @@ void MEVProtectionManager::notify_protection_callbacks(const Transaction& tx, bo
         try {
             callback(tx, is_protected);
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("Protection callback error: " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
         }
     }
 }

@@ -29,6 +29,7 @@ void Logger::log_with_level(LogLevel level, const std::string& level_str, const 
     
     auto& output_stream = (level >= LogLevel::ERROR) ? std::cerr : std::cout;
     output_stream << "[" << ss.str() << "] [" << level_str << "] " << message << std::endl;
+    output_stream.flush(); // Ensure immediate output for trading systems
 }
 
 void Logger::debug(const std::string& message) {

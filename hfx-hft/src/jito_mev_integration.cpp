@@ -54,7 +54,7 @@ static std::string make_http_request(const std::string& url, const std::string& 
     curl_easy_cleanup(curl);
 
     if (res != CURLE_OK) {
-        HFX_LOG_ERROR("[JitoMEV] HTTP request failed: " << curl_easy_strerror(res) << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
         return "";
     }
 
@@ -422,7 +422,7 @@ public:
         // Simulate bundle first
         auto simulation = simulate_bundle(bundle);
         if (!simulation.success) {
-            HFX_LOG_ERROR("[JitoMEV] Bundle simulation failed: " << simulation.error_message << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             return "";
         }
 

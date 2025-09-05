@@ -145,7 +145,7 @@ struct SentimentExecutionPipeline::Impl {
     }
     
     void execution_thread_loop(int thread_id) {
-        HFX_LOG_INFO("Execution thread " << thread_id << " started" << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         
         while (is_running.load()) {
             try {
@@ -190,22 +190,22 @@ struct SentimentExecutionPipeline::Impl {
                 }
                 
                 if (result.success) {
-                    HFX_LOG_INFO("✅ Executed " << signal.token_symbol 
+                    HFX_LOG_INFO("[LOG] Message");
                              << " in " << execution_latency.count() << "μs" << std::endl;
                 } else {
-                    HFX_LOG_INFO("❌ Failed " << signal.token_symbol 
+                    HFX_LOG_INFO("[LOG] Message");
                              << ": " << result.error_message << std::endl;
                 }
                 
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Execution thread error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
                 if (error_callback) {
                     error_callback("execution_thread", e.what());
                 }
             }
         }
         
-        HFX_LOG_INFO("Execution thread " << thread_id << " stopped" << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
     
     ExecutionResult execute_signal_fast(const SentimentSignal& signal) {
@@ -523,7 +523,7 @@ struct SentimentExecutionPipeline::Impl {
                 monitor_news_catalysts();
                 
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Sentiment monitoring error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
             
             std::this_thread::sleep_for(std::chrono::milliseconds(100)); // 100ms cycles
@@ -664,7 +664,7 @@ struct SentimentExecutionPipeline::Impl {
             callback_it->second(signal);
         }
         
-        HFX_LOG_INFO("🔔 Signal: " << signal.token_symbol 
+        HFX_LOG_INFO("[LOG] Message");
                  << " " << signal.direction 
                  << " (Confidence: " << signal.confidence_level << ")" << std::endl;
     }
@@ -679,7 +679,7 @@ struct SentimentExecutionPipeline::Impl {
                 update_priority_fee_recommendations();
                 
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Priority fee monitoring error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(1)); // 1-second updates
@@ -829,7 +829,7 @@ void SentimentExecutionPipeline::pre_sign_transactions(const std::string& token_
         transactions.push_back("signed_tx_" + token_address + "_" + std::to_string(i));
     }
     
-    HFX_LOG_INFO("Pre-signed " << quantity << " transactions for " << token_address << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 bool SentimentExecutionPipeline::has_pre_signed_transaction(const std::string& token_address, 
@@ -879,7 +879,7 @@ void SentimentExecutionPipeline::set_execution_mode(ExecutionUrgency default_urg
 
 void SentimentExecutionPipeline::enable_aggressive_mode(bool enabled) {
     pimpl_->aggressive_mode = enabled;
-    HFX_LOG_INFO("Aggressive mode " << (enabled ? "enabled" : "disabled") 
+    HFX_LOG_INFO("[LOG] Message");
               << " (for memecoin sniping)" << std::endl;
 }
 

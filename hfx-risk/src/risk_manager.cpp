@@ -432,7 +432,7 @@ bool RiskManager::validate_signal(const strat::TradingSignal& signal) {
         end_time - start_time).count();
     update_statistics(processing_time);
     
-    HFX_LOG_INFO("[RiskManager] Validated signal for " << signal.asset_pair 
+    HFX_LOG_INFO("[LOG] Message");
               << " with Kelly size " << kelly_size << "\n";
     return true;
 }
@@ -475,12 +475,12 @@ RiskMetrics RiskManager::get_risk_metrics() const {
 }
 
 void RiskManager::configure_circuit_breaker(const CircuitBreakerConfig& config) {
-    HFX_LOG_INFO("[RiskManager] Configured circuit breaker: " << config.description << "\n";
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void RiskManager::set_position_limit(const PositionLimit& limit) {
     position_limits_[limit.asset] = limit;
-    HFX_LOG_INFO("[RiskManager] Set position limit for " << limit.asset 
+    HFX_LOG_INFO("[LOG] Message");
               << ": $" << limit.max_notional << "\n";
 }
 
@@ -555,7 +555,7 @@ double RiskManager::calculate_kelly_position_size(const strat::TradingSignal& si
 void RiskManager::trigger_risk_alert(RiskLevel level, const std::string& message) {
     risk_alerts_generated_.fetch_add(1, std::memory_order_relaxed);
     
-    HFX_LOG_INFO("[RiskManager] RISK ALERT [" << static_cast<int>(level) << "]: " << message << "\n";
+    HFX_LOG_INFO("[LOG] Message");
     
     if (risk_alert_callback_) {
         risk_alert_callback_(level, message);

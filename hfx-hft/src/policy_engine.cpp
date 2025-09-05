@@ -154,7 +154,7 @@ public:
         policies_[policy_id] = std::move(policy);
         policy_enabled_[policy_id] = true;
         
-        HFX_LOG_INFO("[PolicyEngine] Added policy: " << policy_id << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
     
     void remove_policy(uint32_t policy_id) {
@@ -162,7 +162,7 @@ public:
         policies_.erase(policy_id);
         policy_enabled_.erase(policy_id);
         
-        HFX_LOG_INFO("[PolicyEngine] Removed policy: " << policy_id << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
     
     void enable_policy(uint32_t policy_id, bool enabled) {

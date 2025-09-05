@@ -113,7 +113,7 @@ struct RealTimeDataAggregator::Impl {
             processing_threads.emplace_back(&Impl::processing_thread_loop, this, i);
         }
         
-        HFX_LOG_INFO("RealTimeDataAggregator: Started " << num_cores << " processing threads" << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
     
     void start_all_processing() {
@@ -155,7 +155,7 @@ struct RealTimeDataAggregator::Impl {
     }
     
     void processing_thread_loop(int thread_id) {
-        HFX_LOG_INFO("Processing thread " << thread_id << " started" << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         
         // Set thread priority for low-latency processing
         set_thread_priority();
@@ -178,11 +178,11 @@ struct RealTimeDataAggregator::Impl {
                 }
                 
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Processing thread " << thread_id << " error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
         }
         
-        HFX_LOG_INFO("Processing thread " << thread_id << " stopped" << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
     
     void process_market_data_batch() {
@@ -401,7 +401,7 @@ struct RealTimeDataAggregator::Impl {
                 update_source_reliability();
                 
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Health monitoring error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -419,7 +419,7 @@ struct RealTimeDataAggregator::Impl {
                 clean_expired_signals();
                 
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Signal fusion error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
             
             std::this_thread::sleep_for(std::chrono::milliseconds(100)); // 100ms fusion cycles
@@ -438,7 +438,7 @@ struct RealTimeDataAggregator::Impl {
                 update_quality_metrics();
                 
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Quality control error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
             
             std::this_thread::sleep_for(std::chrono::milliseconds(500)); // 500ms QC cycles
@@ -485,7 +485,7 @@ struct RealTimeDataAggregator::Impl {
     
     void restart_stream_impl(StreamType stream_type) {
         // Stream restart logic - would connect to actual APIs in production
-        HFX_LOG_INFO("Restarting stream type " << static_cast<int>(stream_type) << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         
         std::lock_guard<std::mutex> lock(health_mutex);
         auto& health = stream_health[stream_type];
@@ -786,7 +786,7 @@ bool RealTimeDataAggregator::start_stream(StreamType type, const std::string& co
         std::chrono::duration_cast<std::chrono::seconds>(
             std::chrono::system_clock::now().time_since_epoch()).count());
     
-    HFX_LOG_INFO("Started stream type " << static_cast<int>(type) << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
     return true;
 }
 
@@ -795,7 +795,7 @@ void RealTimeDataAggregator::stop_stream(StreamType type) {
     auto& health = pimpl_->stream_health[type];
     health.is_connected.store(false);
     
-    HFX_LOG_INFO("Stopped stream type " << static_cast<int>(type) << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 bool RealTimeDataAggregator::is_stream_healthy(StreamType type) const {
@@ -811,7 +811,7 @@ void RealTimeDataAggregator::restart_stream(StreamType type) {
 void RealTimeDataAggregator::start_twitter_stream(const std::vector<std::string>& keywords,
                                                  const std::vector<std::string>& usernames) {
     start_stream(StreamType::SOCIAL_MEDIA, "twitter_config");
-    HFX_LOG_INFO("Twitter stream started with " << keywords.size() << " keywords and " 
+    HFX_LOG_INFO("[LOG] Message");
               << usernames.size() << " usernames" << std::endl;
 }
 
@@ -826,26 +826,26 @@ void RealTimeDataAggregator::start_smart_money_stream(const std::vector<std::str
         }
     }
     
-    HFX_LOG_INFO("Smart money stream started monitoring " << watched_wallets.size() 
+    HFX_LOG_INFO("[LOG] Message");
               << " wallets (min size: $" << min_transaction_size << ")" << std::endl;
 }
 
 void RealTimeDataAggregator::start_dexscreener_stream(const std::string& chain, double min_liquidity) {
     start_stream(StreamType::MARKET_DATA, "dexscreener_config");
-    HFX_LOG_INFO("DexScreener stream started for " << chain 
+    HFX_LOG_INFO("[LOG] Message");
               << " (min liquidity: $" << min_liquidity << ")" << std::endl;
 }
 
 void RealTimeDataAggregator::start_reddit_stream(const std::vector<std::string>& subreddits,
                                                 const std::vector<std::string>& keywords) {
     start_stream(StreamType::SOCIAL_MEDIA, "reddit_config");
-    HFX_LOG_INFO("Reddit stream started for " << subreddits.size() << " subreddits" << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void RealTimeDataAggregator::start_news_stream(const std::vector<std::string>& sources,
                                               const std::vector<std::string>& keywords) {
     start_stream(StreamType::NEWS_FEED, "news_config");
-    HFX_LOG_INFO("News stream started for " << sources.size() << " sources" << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void RealTimeDataAggregator::process_live_market_data(const LiveMarketData& data) {
@@ -900,7 +900,7 @@ void RealTimeDataAggregator::register_signal_callback(std::function<void(const A
 
 void RealTimeDataAggregator::enable_low_latency_mode(bool enabled) {
     pimpl_->low_latency_mode.store(enabled);
-    HFX_LOG_INFO("Low-latency mode " << (enabled ? "enabled" : "disabled") << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void RealTimeDataAggregator::set_processing_priority(int priority) {

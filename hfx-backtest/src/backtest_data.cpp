@@ -154,7 +154,7 @@ std::vector<MarketData> CSVDataSource::parse_csv_file(const std::string& file_pa
     std::ifstream file(file_path);
 
     if (!file.is_open()) {
-        HFX_LOG_ERROR("Warning: Could not open file " << file_path << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
         return data;
     }
 
@@ -171,7 +171,7 @@ std::vector<MarketData> CSVDataSource::parse_csv_file(const std::string& file_pa
             MarketData market_data = parse_csv_line(line);
             data.push_back(market_data);
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("Warning: Failed to parse line: " << line << " - " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
         }
     }
 

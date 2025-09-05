@@ -4,7 +4,7 @@
  */
 
 #include "chain_manager.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 
 // Build-time guard to prevent ChainManager from running during compilation
 #ifndef CHAIN_MANAGER_DISABLE_BUILD_TIME

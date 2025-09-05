@@ -109,7 +109,7 @@ void StrategyEngine::process_market_data(const MarketData& market_data) {
     // Check for anomalies
     if (detect_market_anomaly(market_data)) {
         anomalies_detected_.fetch_add(1, std::memory_order_relaxed);
-        HFX_LOG_INFO("[StrategyEngine] Market anomaly detected for " << market_data.symbol << "\n";
+        HFX_LOG_INFO("[LOG] Message");
     }
     
     // Run quantum optimization
@@ -132,7 +132,7 @@ void StrategyEngine::process_market_data(const MarketData& market_data) {
         if (signal_callback_) {
             if (signal_callback_(signal)) {
                 total_signals_generated_.fetch_add(1, std::memory_order_relaxed);
-                HFX_LOG_INFO("[StrategyEngine] Generated signal for " << signal.asset_pair 
+                HFX_LOG_INFO("[LOG] Message");
                           << " with confidence " << signal.confidence << "\n";
             }
         }
@@ -146,13 +146,13 @@ void StrategyEngine::process_market_data(const MarketData& market_data) {
 
 void StrategyEngine::set_strategy_enabled(StrategyType strategy, bool enabled) {
     strategy_enabled_[strategy] = enabled;
-    HFX_LOG_INFO("[StrategyEngine] Strategy " << static_cast<int>(strategy) 
+    HFX_LOG_INFO("[LOG] Message");
               << " " << (enabled ? "enabled" : "disabled") << "\n";
 }
 
 void StrategyEngine::update_strategy_parameters(StrategyType strategy, 
                                                const std::unordered_map<std::string, double>& parameters) {
-    HFX_LOG_INFO("[StrategyEngine] Updated parameters for strategy " << static_cast<int>(strategy) << "\n";
+    HFX_LOG_INFO("[LOG] Message");
     // Parameter updates would be implemented here
 }
 

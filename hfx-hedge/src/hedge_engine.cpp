@@ -32,7 +32,7 @@ bool HedgeEngine::execute_hedge(const strat::TradingSignal& signal) {
         return false;
     }
     
-    HFX_LOG_INFO("[HedgeEngine] Executing hedge for " << signal.asset_pair 
+    HFX_LOG_INFO("[LOG] Message");
               << " size " << signal.size << "\n";
     
     // Simplified hedge execution

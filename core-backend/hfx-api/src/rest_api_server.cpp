@@ -1,5 +1,5 @@
 #include "rest_api_server.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -1080,7 +1080,7 @@ bool WebSocketManager::is_running() const {
 
 void WebSocketManager::broadcast_to_all(const std::string& message) {
     // Mock implementation - in real implementation this would send to all connected clients
-    // HFX_LOG_INFO("Broadcasting: " << message << std::endl;
+    // HFX_LOG_INFO("[LOG] Message");
 }
 
 void WebSocketManager::broadcast_system_metrics(const nlohmann::json& metrics) {

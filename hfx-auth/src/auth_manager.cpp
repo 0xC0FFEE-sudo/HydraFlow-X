@@ -8,7 +8,7 @@
 #include "../include/user_manager.hpp"
 #include "../include/session_manager.hpp"
 #include "../include/api_key_manager.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <iostream>
 #include <sstream>
 #include <iomanip>

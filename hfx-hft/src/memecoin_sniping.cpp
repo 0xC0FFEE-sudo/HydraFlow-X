@@ -60,7 +60,7 @@ public:
         scanning_.store(true);
         scanner_thread_ = std::make_unique<std::thread>(&ScannerImpl::scanning_loop, this);
         
-        HFX_LOG_INFO("[MemecoinScanner] Started scanning on " << config_.blockchains.size() 
+        HFX_LOG_INFO("[LOG] Message");
                   << " blockchains" << std::endl;
     }
     
@@ -346,7 +346,7 @@ public:
     
     void add_smart_money_filter(const std::vector<std::string>& smart_wallets) {
         smart_wallets_ = smart_wallets;
-        HFX_LOG_INFO("[MemecoinScanner] Added " << smart_wallets.size() 
+        HFX_LOG_INFO("[LOG] Message");
                   << " smart money wallets for tracking" << std::endl;
     }
 };
@@ -420,14 +420,14 @@ public:
         std::lock_guard<std::mutex> lock(platforms_mutex_);
         platforms_[platform] = std::move(integration);
         
-        HFX_LOG_INFO("[MemecoinEngine] Added platform: " << static_cast<int>(platform) << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
     
     void remove_platform(TradingPlatform platform) {
         std::lock_guard<std::mutex> lock(platforms_mutex_);
         platforms_.erase(platform);
         
-        HFX_LOG_INFO("[MemecoinEngine] Removed platform: " << static_cast<int>(platform) << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
     }
     
     void enable_sniper_mode(double max_buy_amount, double target_profit_percent) {
@@ -435,7 +435,7 @@ public:
         max_snipe_amount_ = max_buy_amount;
         target_profit_percent_ = target_profit_percent;
         
-        HFX_LOG_INFO("[MemecoinEngine] 🎯 Sniper mode enabled - Max: " << max_buy_amount 
+        HFX_LOG_INFO("[LOG] Message");
                   << " ETH/SOL, Target: " << target_profit_percent << "%" << std::endl;
     }
     
@@ -444,7 +444,7 @@ public:
         copy_percentage_ = copy_percentage;
         max_copy_delay_ms_ = max_delay_ms;
         
-        HFX_LOG_INFO("[MemecoinEngine] 🧠 Smart money copy enabled - " << copy_percentage 
+        HFX_LOG_INFO("[LOG] Message");
                   << "% copy, max delay: " << max_delay_ms << "ms" << std::endl;
     }
     
@@ -514,7 +514,7 @@ public:
         params.anti_mev_protection = mev_protection_enabled_;
         params.max_execution_time_ms = 500; // Must execute within 500ms
         
-        HFX_LOG_INFO("[MemecoinEngine] 🎯 SNIPING: " << token.symbol 
+        HFX_LOG_INFO("[LOG] Message");
                   << " (" << params.amount_sol_or_eth << " " 
                   << token.blockchain << ")" << std::endl;
         
@@ -522,10 +522,10 @@ public:
         
         if (result.success) {
             metrics_.successful_snipes.fetch_add(1);
-            HFX_LOG_INFO("[MemecoinEngine] ✅ SNIPE SUCCESS: " << token.symbol 
+            HFX_LOG_INFO("[LOG] Message");
                       << " in " << result.execution_latency_ns / 1000 << "μs" << std::endl;
         } else {
-            HFX_LOG_INFO("[MemecoinEngine] ❌ SNIPE FAILED: " << token.symbol 
+            HFX_LOG_INFO("[LOG] Message");
                       << " - " << result.error_message << std::endl;
         }
         
@@ -642,13 +642,13 @@ void MemecoinExecutionEngine::stop_token_discovery() {
 void MemecoinExecutionEngine::add_token_watch(const std::string& token_address) {
     std::lock_guard<std::mutex> lock(pimpl_->watched_tokens_mutex_);
     pimpl_->watched_tokens_.insert(token_address);
-    HFX_LOG_INFO("[MemecoinEngine] Added token to watchlist: " << token_address << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void MemecoinExecutionEngine::remove_token_watch(const std::string& token_address) {
     std::lock_guard<std::mutex> lock(pimpl_->watched_tokens_mutex_);
     pimpl_->watched_tokens_.erase(token_address);
-    HFX_LOG_INFO("[MemecoinEngine] Removed token from watchlist: " << token_address << std::endl;
+    HFX_LOG_INFO("[LOG] Message");
 }
 
 void MemecoinExecutionEngine::enable_sniper_mode(double max_buy_amount, double target_profit_percent) {

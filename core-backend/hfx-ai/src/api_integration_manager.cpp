@@ -290,7 +290,7 @@ struct APIIntegrationManager::Impl {
                 auto json_data = nlohmann::json::parse(response.data);
                 tweets = parse_twitter_response(json_data);
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Error parsing Twitter response: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
         }
         
@@ -442,7 +442,7 @@ struct APIIntegrationManager::Impl {
                 auto json_data = nlohmann::json::parse(response.data);
                 return parse_gmgn_response(json_data, token_address);
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Error parsing GMGN response: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
         }
         
@@ -510,7 +510,7 @@ struct APIIntegrationManager::Impl {
                 auto json_data = nlohmann::json::parse(response.data);
                 return parse_dexscreener_response(json_data, token_address);
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Error parsing DexScreener response: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
         }
         
@@ -615,7 +615,7 @@ struct APIIntegrationManager::Impl {
                 clean_old_cache_entries();
                 
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Feed processing error: " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
             
             std::this_thread::sleep_for(std::chrono::seconds(30)); // 30-second cycles
@@ -641,7 +641,7 @@ struct APIIntegrationManager::Impl {
             
             if (!response.empty()) {
                 trending = parse_dexscreener_response(response);
-                HFX_LOG_INFO("✅ Fetched " << trending.size() << " tokens from DexScreener API" << std::endl;
+                HFX_LOG_INFO("[LOG] Message");
             } else {
                 HFX_LOG_INFO("⚠️  DexScreener API request failed, using fallback data");
                 // Fallback to synthetic data
@@ -650,7 +650,7 @@ struct APIIntegrationManager::Impl {
                 }
             }
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("❌ DexScreener API error: " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             // Fallback to synthetic data
             for (int i = 0; i < 5; ++i) {
                 trending.push_back(generate_synthetic_dexscreener_data("error_fallback_" + std::to_string(i)));
@@ -670,7 +670,7 @@ struct APIIntegrationManager::Impl {
             
             if (!response.empty()) {
                 trending = parse_gmgn_response(response);
-                HFX_LOG_INFO("✅ Fetched " << trending.size() << " smart money tokens from GMGN API" << std::endl;
+                HFX_LOG_INFO("[LOG] Message");
             } else {
                 HFX_LOG_INFO("⚠️  GMGN API request failed, using fallback data");
                 // Fallback to synthetic data
@@ -679,7 +679,7 @@ struct APIIntegrationManager::Impl {
                 }
             }
         } catch (const std::exception& e) {
-            HFX_LOG_ERROR("❌ GMGN API error: " << e.what() << std::endl;
+            HFX_LOG_ERROR("[ERROR] Message");
             // Fallback to synthetic data
             for (int i = 0; i < 5; ++i) {
                 trending.push_back(generate_synthetic_gmgn_data("error_fallback_" + std::to_string(i)));
@@ -709,7 +709,7 @@ struct APIIntegrationManager::Impl {
         double combined_score = (technical_score + smart_money_score) / 2.0;
         
         if (combined_score > 0.7) {
-            HFX_LOG_INFO("🚀 HIGH OPPORTUNITY: " << dex_data.symbol 
+            HFX_LOG_INFO("[LOG] Message");
                      << " Score: " << combined_score << std::endl;
         }
     }
@@ -740,7 +740,7 @@ struct APIIntegrationManager::Impl {
                 std::string sample_data = R"({"type":")" + stream_type + R"(","data":"sample"})";
                 callback(sample_data);
             } catch (const std::exception& e) {
-                HFX_LOG_ERROR("Callback error for " << stream_type << ": " << e.what() << std::endl;
+                HFX_LOG_ERROR("[ERROR] Message");
             }
         }
     }
@@ -763,7 +763,7 @@ struct APIIntegrationManager::Impl {
         // For this demo, we'll simulate HTTP requests
         // In production, this would use libcurl or similar HTTP client
         
-        HFX_LOG_INFO("🌐 Making HTTP request to: " << url << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
         
         // Simulate network delay
         std::this_thread::sleep_for(std::chrono::milliseconds(100 + (rand() % 500)));
@@ -1114,7 +1114,7 @@ bool APIIntegrationManager::is_rate_limited(const std::string& api_name) {
 }
 
 void APIIntegrationManager::handle_api_error(const std::string& api_name, const std::string& error) {
-    HFX_LOG_ERROR("API Error [" << api_name << "]: " << error << std::endl;
+    HFX_LOG_ERROR("[ERROR] Message");
     pimpl_->api_metrics[api_name].failed_requests.fetch_add(1);
 }
 

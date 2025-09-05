@@ -4,6 +4,7 @@
  */
 
 #include "thread_utils.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <thread>
 #include <iostream>
 
@@ -18,7 +19,7 @@ bool ThreadUtils::pin_to_cpu(std::uint32_t cpu_id) {
 #ifdef __APPLE__
     // macOS doesn't support CPU affinity, but we can set thread QoS
     pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
-    HFX_LOG_INFO("[ThreadUtils] Set high QoS class (CPU affinity not supported on macOS)\n";
+    HFX_LOG_INFO("[ThreadUtils] Set high QoS class (CPU affinity not supported on macOS)\n");
     return true;
 #else
     // Linux implementation would go here

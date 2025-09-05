@@ -43,7 +43,7 @@ static std::string make_rpc_call(const std::string& url, const std::string& json
     curl_easy_cleanup(curl);
 
     if (res != CURLE_OK) {
-        HFX_LOG_ERROR("[DEX] RPC call failed: " << curl_easy_strerror(res) << std::endl;
+        HFX_LOG_ERROR("[ERROR] Message");
         return "";
     }
 

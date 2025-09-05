@@ -167,7 +167,7 @@ private:
     
     void handle_new_token(const MemecoinToken& token) {
         tokens_discovered_.fetch_add(1);
-        HFX_LOG_INFO("🆕 NEW TOKEN: " << token.symbol << " on " << token.blockchain 
+        HFX_LOG_INFO("[LOG] Message");
                   << " (Liquidity: $" << static_cast<int>(token.liquidity_usd) << ")" << std::endl;
     }
     
@@ -176,10 +176,10 @@ private:
         
         if (result.success) {
             successful_snipes_.fetch_add(1);
-            HFX_LOG_INFO("✅ TRADE SUCCESS: " << result.transaction_hash 
+            HFX_LOG_INFO("[LOG] Message");
                       << " (Latency: " << result.execution_latency_ns / 1000 << "μs)" << std::endl;
         } else {
-            HFX_LOG_INFO("❌ TRADE FAILED: " << result.error_message << std::endl;
+            HFX_LOG_INFO("[LOG] Message");
         }
     }
     
@@ -189,7 +189,7 @@ private:
             double snipe_amount = calculate_snipe_amount(token);
             auto result = memecoin_engine_->snipe_new_token(token, snipe_amount);
             
-            HFX_LOG_INFO("🎯 AUTO-SNIPE: " << token.symbol 
+            HFX_LOG_INFO("[LOG] Message");
                       << " (" << snipe_amount << " " << token.blockchain << ")" << std::endl;
         }
     }
@@ -215,12 +215,12 @@ private:
         execution_engine_->get_metrics(exec_metrics);
         
         HFX_LOG_INFO("\n📊 LIVE STATS:");
-        HFX_LOG_INFO("   Tokens Discovered: " << tokens_discovered_.load() << std::endl;
-        HFX_LOG_INFO("   Total Trades: " << metrics.total_trades.load() << std::endl;
-        HFX_LOG_INFO("   Successful Snipes: " << metrics.successful_snipes.load() << std::endl;
-        HFX_LOG_INFO("   Avg Execution Latency: " << exec_metrics.avg_latency_ns.load() / 1000 << "μs" << std::endl;
-        HFX_LOG_INFO("   Current P&L: $" << static_cast<int>(metrics.total_pnl.load()) << std::endl;
-        HFX_LOG_INFO("   MEV Attacks Avoided: " << metrics.mev_attacks_avoided.load() << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
     }
     
     void print_final_summary() {
@@ -231,15 +231,15 @@ private:
         
         HFX_LOG_INFO("\n🏁 FINAL SUMMARY:");
         HFX_LOG_INFO("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        HFX_LOG_INFO("Total Tokens Discovered: " << tokens_discovered_.load() << std::endl;
-        HFX_LOG_INFO("Total Trades Executed: " << metrics.total_trades.load() << std::endl;
-        HFX_LOG_INFO("Successful Snipes: " << metrics.successful_snipes.load() << std::endl;
-        HFX_LOG_INFO("Success Rate: " << (metrics.total_trades.load() > 0 ? 
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
             (100.0 * metrics.successful_snipes.load() / metrics.total_trades.load()) : 0) << "%" << std::endl;
-        HFX_LOG_INFO("Average Execution Latency: " << exec_metrics.avg_latency_ns.load() / 1000 << "μs" << std::endl;
-        HFX_LOG_INFO("Maximum Execution Latency: " << exec_metrics.max_latency_ns.load() / 1000 << "μs" << std::endl;
-        HFX_LOG_INFO("Total P&L: $" << static_cast<int>(metrics.total_pnl.load()) << std::endl;
-        HFX_LOG_INFO("MEV Attacks Avoided: " << metrics.mev_attacks_avoided.load() << std::endl;
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
+        HFX_LOG_INFO("[LOG] Message");
         HFX_LOG_INFO("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         HFX_LOG_INFO("\n🎉 HydraFlow-X Demo Complete! Fastest memecoin trading system operational.");
     }

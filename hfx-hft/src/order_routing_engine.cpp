@@ -86,7 +86,7 @@ public:
 
         metrics_.total_orders_processed++;
 
-        HFX_LOG_INFO("[OrderRouter] Submitted order: " << processed_order.order_id
+        HFX_LOG_INFO("[LOG] Message");
                   << " (" << processed_order.amount_in << " " << processed_order.token_in
                   << " -> " << processed_order.token_out << ")" << std::endl;
 
@@ -213,7 +213,7 @@ public:
         auto it = active_orders_.find(order_id);
         if (it != active_orders_.end()) {
             active_orders_.erase(it);
-            HFX_LOG_INFO("[OrderRouter] Cancelled order: " << order_id << std::endl;
+            HFX_LOG_INFO("[LOG] Message");
             return true;
         }
         return false;
@@ -226,7 +226,7 @@ public:
             it->second = updated_order;
             it->second.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now().time_since_epoch()).count();
-            HFX_LOG_INFO("[OrderRouter] Modified order: " << order_id << std::endl;
+            HFX_LOG_INFO("[LOG] Message");
             return true;
         }
         return false;
@@ -534,7 +534,7 @@ private:
                                                         amount, 0.5, order.user_address);
 
         if (!tx_hash.empty()) {
-            HFX_LOG_INFO("[OrderRouter] Executed " << amount << " on " << venue
+            HFX_LOG_INFO("[LOG] Message");
                       << " (tx: " << tx_hash << ")" << std::endl;
         }
 

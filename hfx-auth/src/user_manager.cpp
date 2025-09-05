@@ -4,7 +4,7 @@
  */
 
 #include "../include/user_manager.hpp"
-#include "hfx-log/include/logger.hpp"
+#include "../../hfx-log/include/simple_logger.hpp"
 #include <algorithm>
 
 namespace hfx {
